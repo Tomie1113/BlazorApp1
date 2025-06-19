@@ -24,6 +24,20 @@
     private string CoinMessage = "";
     private bool IsPositiveCoin = true;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("initButtonSounds");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"JS init error: {ex.Message}");
+            }
+        }
+    }
     private async Task ShowCoinChange(int delta, string sound = "defaultSound")
     {
         try
@@ -32,7 +46,7 @@
             {
                 // ❌ Неверный ответ
                 IsPositiveCoin = false;
-                CoinMessage = "Ответ неверный";
+                CoinMessage = "Ответ неверный!";
             }
             else
             {
@@ -167,24 +181,27 @@
     bool showShop = false;
     bool showMyFlowers = false;
 
-    void OpenSettings()
+     void OpenSettings()
     {
+
         showSettings = true;
         showShop = false;
         showMyFlowers = false;
         StateHasChanged();
     }
 
-    void OpenMyFlowers()
+     void OpenMyFlowers()
     {
+
         showSettings = false;
         showShop = false;
         showMyFlowers = true;
         StateHasChanged();
     }
 
-    void CloseModals()
+     void CloseModals()
     {
+
         showSettings = false;
         showShop = false;
         showMyFlowers = false;
@@ -510,6 +527,7 @@
 
     private void OpenQuestionModal(int slot)
     {
+         JSRuntime.InvokeVoidAsync("initButtonSounds");
         if (UserSession.CurrentUser == null)
         {
             Debug.WriteLine($"⛔ Cannot open modal: user is null");
@@ -823,7 +841,7 @@
             </div>
         }
     }
-        <script src="js/audio.js"></script>
+        <script src="audio.js"></script>
 
         <audio id="successSound" src="/audio/success.mp3" preload="auto"></audio>
         <audio id="loseSound" src="/audio/lose.mp3" preload="auto"></audio>
