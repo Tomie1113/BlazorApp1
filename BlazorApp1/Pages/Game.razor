@@ -27,19 +27,6 @@
     private string shopTitleMessage = "";
     private string shopErrorMessage = "";
     private string zeroFlowersMessage = "";
-    private async Task ShowCoinChange(int delta, string sound = "defaultSound")
-    {
-         if (delta == 0) return;
-
-         IsPositiveCoin = delta > 0;
-         CoinMessage = IsPositiveCoin ? $"+{delta} монет" : $"-{Math.Abs(delta)} монет";
-         ShowCoinNotification = true;
-
-         _ = JSRuntime.InvokeVoidAsync("playSound", sound);
-
-         StateHasChanged();
-         _ = HideCoinNotificationAfterDelay(1500);
-     }
   
     private async Task ShowCoinChange(int delta, string sound = "defaultSound")
     {
