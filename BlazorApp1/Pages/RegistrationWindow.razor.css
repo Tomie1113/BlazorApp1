@@ -93,7 +93,22 @@
 }
 
 .modal.error-modal {
-    display: block;
+    width: auto;
+    height: auto;
+    min-width: 20vw;
+    max-width: 80vw;
+    padding: 20px;
+    border: 2px solid #cc0000;
+    background: #fff2f2;
+    color: #5a0000;
+    box-shadow: 0px 6px 20px rgba(200, 0, 0, 0.3);
+    font-family: 'Segoe UI', sans-serif; /* Optional: use different font for contrast */
+}
+
+.error-modal .modal-title {
+    font-size: 22px;
+    margin-bottom: 12px;
+    color: #cc0000;
 }
 
 /* Модальное окно */
