@@ -26,3 +26,8 @@ window.setEffectsVolume = function (vol) {
         if (s) s.volume = vol;
     });
 };
+
+window.saveVolumePrefs = function (musicVol, effectsVol) {
+    document.cookie = `musicVolume=${musicVol}; path=/; max-age=2592000`;  // 30 days
+    document.cookie = `effectsVolume=${effectsVol}; path=/; max-age=2592000`;
+};

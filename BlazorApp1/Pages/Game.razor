@@ -22,6 +22,22 @@
         await LoadShopFlowers(); // теперь await
         StateHasChanged();
     }
+    private bool _initialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialized)
+        {
+            _initialized = true;
+
+            await JSRuntime.InvokeVoidAsync("eval",
+                @"document.body.addEventListener(
+                'click',
+                () => window.initAudio(),
+                { once: true }
+              );");
+        }
+    }
     private bool ShowCoinNotification = false;
     private string CoinMessage = "";
     private bool IsPositiveCoin = true;
@@ -36,8 +52,9 @@
         {
             if (_musicVolume == value) return;
             _musicVolume = value;
-            // fire‐and‐forget is fine here
             _ = JSRuntime.InvokeVoidAsync("setMusicVolume", _musicVolume / 100.0);
+            _ = JSRuntime.InvokeVoidAsync("saveVolumePrefs", _musicVolume, _effectsVolume);
+
         }
     }
 
@@ -50,6 +67,7 @@
             if (_effectsVolume == value) return;
             _effectsVolume = value;
             _ = JSRuntime.InvokeVoidAsync("setEffectsVolume", _effectsVolume / 100.0);
+            _ = JSRuntime.InvokeVoidAsync("saveVolumePrefs", _musicVolume, _effectsVolume);
         }
     }
 
@@ -406,7 +424,14 @@
     {
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
-        _ = JSRuntime.InvokeVoidAsync("eval", "document.body.addEventListener('click', () => window.initAudio(), { once: true })");
+        var req = httpContextAccessor.HttpContext?.Request;
+        if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
+            int.TryParse(mvStr, out var mv))
+            MusicVolume = mv;
+
+        if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
+            int.TryParse(evStr, out var ev))
+            EffectsVolume = ev;
 
         await LoadValidTypeIds();
 
@@ -415,6 +440,7 @@
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
     }
+
 
     private async Task HandleTimerTick()
     {
@@ -766,12 +792,12 @@
            
             <label>
                 @Localizer["MusicVolumeLabel"]
-                    <input type="range" min="0" max="100" @bind-value="MusicVolume" @bind-value:event="oninput" />
+                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="MusicVolume" @bind-value:event="oninput" />
             </label>
 
             <label>
                 @Localizer["EffectsVolumeLabel"]
-                <input type="range" min="0" max="100" @bind-value="EffectsVolume"  @bind-value:event="oninput" />
+                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="EffectsVolume" @bind-value:event="oninput" />
             </label>
 
             <div class="modal-buttons">
