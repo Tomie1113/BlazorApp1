@@ -88,6 +88,20 @@
             Console.WriteLine($"Ошибка в ShowCoinChange: {ex.Message}");
         }
     }
+    private string GetStateDisplayName(string state, Flower flower)
+    {
+        if (flower.IsDead)
+            return "Сдох цветок";
+
+        return state switch
+        {
+            "pre_fall" => "Увядает",
+            "fall" => "Уже почти умер",
+            "pre_rise" => "Расцветает",
+            "rise" => "Цветёт",
+            _ => "Жив"
+        };
+    }
     private async Task HideCoinNotificationAfterDelay(int delayMs)
     {
         await Task.Delay(delayMs);
@@ -643,7 +657,31 @@
         questionTimer?.Stop();
         questionTimer?.Dispose();
     }
+    private string GetShopFlowerImage(Flower flower)
+    {
+        // Список всех доступных изображений цветов в магазине
+        string[] shopImages = new[]
+        {
+        "aloe_medicine.png",
+        "cactus_physics.png",
+        "fern_biology.png",
+        "ficus_classic.png",
+        "mandarin_ecology.png",
+        "onion_chemistry.png",
+        "orchid_poetry.png",
+        "palm_climate.png",
+        "predatory_grass.png",
+        "rose_eternal.png",
+        "violet_wave.png"
+    };
 
+        // Найдём индекс текущего цветка в списке shopFlowers
+        int index = shopFlowers.IndexOf(flower);
+        if (index < 0) return "/images/flowers/empty.png"; // Если цветок не найден
+
+        // Возвращаем путь к изображению
+        return $"/images/flowers_shop/{shopImages[index % shopImages.Length]}";
+    }
 }
 @if (UserSession.CurrentUser != null)
 {
@@ -768,10 +806,11 @@
                         @foreach (var flower in shopFlowers)
                         {
                             <div class="flower-card">
-                                <img src="/images/flowers_shop/@flower.CodeName/rise.png" class="flower-img" />
+                                <img src="@GetShopFlowerImage(flower)" class="flower-img" />
                                 <div class="flower-name">@flower.DisplayName</div>
+                                <div class="spacer"></div> <!-- вот эта вставка важна -->
                                 <div class="flower-action">
-                                    <button class="action-button" @onclick="@(async () => { BuyFlower(flower); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                                    <button class="flower-button" @onclick="@(async () => { BuyFlower(flower); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
                                         @Localizer["BuyPriceTag"]@flower.PriceBuy
                                     </button>
                                 </div>
@@ -817,8 +856,35 @@
                                 case "pre_rise": sellPrice = (int)(sellPrice * 1.5); break;
                                 case "rise": sellPrice *= 2; break;
                             }
+                                <div class="flower-card">
+                                    <div class="image-stack">
+                                        <img src="/images/box/cream_box.png" class="pot-image" />
+                                        <img src="@flower.GetStateImage()" class="flower-image1" />
+                                    </div>
 
-                            <div class="flower-card">
+                                    <div class="flower-title">@flower.DisplayName</div>
+                                    <div class="flower-status">@GetStateDisplayName(state, flower)</div>
+                                    <div class="spacer"></div> <!-- вот эта вставка важна -->
+                                    <div class="flower-actions">
+                                        
+                                        @if (flower.IsDead)
+                                        {
+                                            <button class="flower-button remove" @onclick="() => ThrowOutFlower(flower)">
+                                                🗑 <span>@Localizer["RemovePlantTag"]</span>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="flower-button" @onclick="() => SellFlower(flower, sellPrice)">
+                                                @Localizer["SellPriceTag"] @sellPrice
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+
+
+                            @* <div class="flower-card">
                                 <img src="@flower.GetStateImage()" class="flower-img"/>
                                 <div class="flower-name">@flower.DisplayName</div>
                                 <div class="flower-state">@Localizer["FlowerState"]@state</div>
@@ -839,7 +905,7 @@
                                     }
 
                                 </div>
-                            </div>
+                            </div> *@
                         }
                     </div>
                 }
@@ -855,7 +921,7 @@
 
         </div>
     }
-
+    
     @if (currentQuestionSlot != null && activeQuestions.ContainsKey(currentQuestionSlot.Value))
     {
         var question = activeQuestions[currentQuestionSlot.Value];
@@ -864,19 +930,25 @@
             <div class="question-modal">
                 <h3>@Localizer["QestionHeader"]</h3>
                 <p>@question.Content</p>
+                    @foreach (var answer in question.Answers)
+                    {
+                        <label>
+                            <input type="radio" name="answer" value="@answer.Id"
+                                   @onchange="@(
+                    async () =>
+                    {
+                        selectedAnswerId = answer.Id;
+                        await JSRuntime.InvokeVoidAsync("playSound", "defaultSound");
+                    }
+                )"
+                                   checked="@((selectedAnswerId == answer.Id))" />
+                            @answer.Content
+                        </label>
+                    }
 
-                @foreach (var answer in question.Answers)
-                {
-                    <label>
-                        <input type="radio" name="answer" value="@answer.Id"
-                               @onchange="@(() => selectedAnswerId = answer.Id)"
-                               checked="@((selectedAnswerId == answer.Id))" />
-                        @answer.Content
-                    </label>
-                }
 
-                <button class="action-button" @onclick="SubmitAnswer">Ответить</button>
-                <button class="close-full-button" @onclick="CloseQuestionModal">Закрыть</button>
+                <button class="action-button1" @onclick="SubmitAnswer">Ответить</button>
+                <button class="close-full-button1" @onclick="CloseQuestionModal">Закрыть</button>
             </div>
         }
     }
