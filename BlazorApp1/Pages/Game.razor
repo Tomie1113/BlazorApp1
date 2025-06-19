@@ -98,6 +98,7 @@
     };
     private string GetFlowerImage(int slot)
     {
+
         var flower = UserSession.CurrentUser.Flowers.FirstOrDefault(f => f.Slot == slot);
         return flower != null
             ? flower.GetStateImage()
@@ -137,7 +138,27 @@
 
     void GoToLogin()
     {
+        // 1. Остановить и освободить таймер
+        if (questionTimer != null)
+        {
+            questionTimer.Stop();
+            questionTimer.Dispose();
+            questionTimer = null;
+        }
+
+        // 2. Очистить состояние
+        activeQuestions.Clear();
+        currentQuestionSlot = null;
+        selectedAnswerId = null;
+
+        showSettings = false;
+        showShop = false;
+        showMyFlowers = false;
+
+        // 3. Сбросить пользователя
         UserSession.CurrentUser = null;
+
+        // 4. Перейти на страницу регистрации
         Navigation.NavigateTo("/registration", true);
     }
     private async void SellFlower(Flower flower, int price)
@@ -154,27 +175,54 @@
         deleteCmd.Parameters.AddWithValue("@slot", flower.Slot);
         await deleteCmd.ExecuteNonQueryAsync();
 
-        // 2. Обновить количество монет в БД
+        // 2. Обновить монеты пользователя
         UserSession.CurrentUser.Coins += price;
+
         var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
         updateCoins.Parameters.AddWithValue("@coins", UserSession.CurrentUser.Coins);
         updateCoins.Parameters.AddWithValue("@id", UserSession.CurrentUser.Id);
         await updateCoins.ExecuteNonQueryAsync();
 
-        // 3. Удалить из C#
+        // 3. Удалить цветок из списка цветов
         UserSession.CurrentUser.Flowers.Remove(flower);
+
+        // 4. Закрыть вопрос, если он связан с этим цветком
+        if (currentQuestionSlot.HasValue && currentQuestionSlot.Value == flower.Slot)
+        {
+            CloseQuestionModal();
+        }
+
+        // 5. Удалить вопрос из activeQuestions
+        if (activeQuestions.ContainsKey(flower.Slot))
+        {
+            activeQuestions.Remove(flower.Slot);
+        }
 
         StateHasChanged();
     }
 
     private void ThrowOutFlower(Flower flower)
     {
+        // 1. Удалить цветок из списка цветов
         UserSession.CurrentUser.Flowers.Remove(flower);
-        // TODO: удалить цветок из БД
+
+        // 2. Закрыть вопрос, если он связан с этим цветком
+        if (currentQuestionSlot.HasValue && currentQuestionSlot.Value == flower.Slot)
+        {
+            CloseQuestionModal();
+        }
+
+        // 3. Удалить вопрос из activeQuestions
+        if (activeQuestions.ContainsKey(flower.Slot))
+        {
+            activeQuestions.Remove(flower.Slot);
+        }
+
+        // 4. TODO: Удалить цветок из БД
+        // Это можно добавить позже, если потребуется
+
         StateHasChanged();
     }
-
-
     private Dictionary<int, QuestionWithAnswers?> activeQuestions = new(); // слот => вопрос или null
     private int? currentQuestionSlot = null;
     private int? selectedAnswerId = null;
@@ -216,7 +264,7 @@
         //         questionTimer.Interval = 1000; // быстро, если нет вопросов
         //     }
         //    await AskNextQuestion();
-        //     
+        //
         // };
 
         //questionTimer.AutoReset = true;
@@ -260,6 +308,11 @@
     {
         try
         {
+            if (UserSession.CurrentUser == null)
+            {
+                Debug.WriteLine("❌ AskNextQuestion cancelled: user is null");
+                return;
+            }
             var candidates = UserSession.CurrentUser.Flowers
                 .Where(f => !f.IsDead && !activeQuestions.ContainsKey(f.Slot) && validTypeIds.Contains(f.TypeId))
                 .Select(f => f.Slot)
@@ -290,6 +343,11 @@
     {
         try
         {
+            if (UserSession.CurrentUser == null)
+            {
+                Debug.WriteLine("❌ Current user is null");
+                return;
+            }
             var flower = UserSession.CurrentUser.Flowers.FirstOrDefault(f => f.Slot == slot);
             if (flower == null || flower.IsDead || activeQuestions.ContainsKey(slot))
             {
@@ -354,8 +412,13 @@
     }
 
 
-private void OpenQuestionModal(int slot)
+    private void OpenQuestionModal(int slot)
     {
+        if (UserSession.CurrentUser == null)
+        {
+            Debug.WriteLine($"⛔ Cannot open modal: user is null");
+            return;
+        }
         Debug.WriteLine($"📥 Opening question modal for slot {slot}");
 
         var flower = UserSession.CurrentUser.Flowers.FirstOrDefault(f => f.Slot == slot);
@@ -375,7 +438,6 @@ private void OpenQuestionModal(int slot)
         selectedAnswerId = null;
         StateHasChanged();
     }
-
 
     private void CloseQuestionModal()
     {
@@ -444,38 +506,36 @@ private void OpenQuestionModal(int slot)
     }
 
 }
-
+@if (UserSession.CurrentUser != null)
+{
 <div class="game-wrapper">
     <div class="game-container">
-@*         <div class="game-field">
-            <div class="shelf">
-                @for (int i = 0; i < 3; i++)
-                {
-                    <div class="flower-slot">
-                        <div class="flower-box">
-                            <img src="@GetFlowerImage(i)" class="flower" />
-                        </div>
-                        <div class="pot-box" style="background-image: url('@GetPotImage(i)');"></div>
-                    </div>
-
-                }
-            </div>
-            <div class="shelf">
-                @for (int i = 3; i < 6; i++)
-                {
-                    <div class="flower-slot">
-                        <div class="flower-box">
-                            <img src="@GetFlowerImage(i)" class="flower" />
-                        </div>
-                        <div class="pot-box" style="background-image: url('@GetPotImage(i)');"></div>
-                    </div>
- 
-                }
-            </div>
-        </div> *@
         <div class="game-field">
-            <div class="shelf">
+            <div class="shelf">            
                 @foreach (var slot in new[] { 0, 1, 2 })
+                {
+                    <div class="flower-slot">
+                        <!-- Горшок (должен быть внизу) -->
+                        <div class="pot-box">
+                            <img src="@GetPotImage(slot)" />
+                        </div>
+
+                        <!-- Цветок (должен быть сверху) -->
+                        <div class="flower-box">
+                            <img src="@GetFlowerImage(slot)" />
+                            @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
+                            {
+                                <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
+                                    ❓
+                                </div>
+                            }
+                        </div>
+                    </div>
+                 
+                 }
+            </div>
+            <div class="shelf">
+                @foreach (var slot in new[] { 3, 4, 5 })
                 {
                     <div class="flower-slot">
                         <!-- Горшок (должен быть внизу) -->
@@ -496,25 +556,8 @@ private void OpenQuestionModal(int slot)
                     </div>
                 }
             </div>
-            <div class="shelf">
-                @foreach (var slot in new[] { 3, 4, 5 })
-                {
-                    <div class="flower-slot">
-                        <div class="flower-box">
-                            <img src="@GetFlowerImage(slot)"  />
-                            @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
-                            {
-                                <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
-                                    ❓
-                                </div>
-                            }
-                        </div>
-                        <div class="pot-box" style="background-image: url('@GetPotImage(slot)');"></div>
-                    </div>
-                }
-            </div>
+        
         </div>
-
         <div class="money-container">
             <img class="money-icon" src="images/icons/money.png" />
             <div class="money-amount">@UserSession.CurrentUser.Coins</div>
@@ -677,5 +720,5 @@ private void OpenQuestionModal(int slot)
             </div>
         }
     }
-
-</div>
+ </div>
+ }
