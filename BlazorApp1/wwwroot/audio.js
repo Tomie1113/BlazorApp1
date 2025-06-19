@@ -1,14 +1,17 @@
-﻿window.initAudio = () => {
-    window.sounds = {
-        successSound: document.getElementById("successSound"),
-        loseSound: document.getElementById("loseSound"),
-        defaultSound: document.getElementById("defaultSound")
-    };
+﻿window.playSound = function (audioId) {
+    const audio = document.getElementById(audioId);
+    if (audio) {
+        audio.play().catch(e => console.warn("Audio play error:", e));
+    }
 }
-
-window.playSound = (soundName) => {
-    if (window.sounds && window.sounds[soundName]) {
-        window.sounds[soundName].currentTime = 0;
-        window.sounds[soundName].play();
+window.initAudio = function () {
+    const sounds = ["successSound", "loseSound", "defaultSound"];
+    for (const id of sounds) {
+        const audio = document.getElementById(id);
+        if (audio) {
+            audio.play().catch(() => { }); // пытаемся воспроизвести чтобы браузер дал разрешение
+            audio.pause();
+            audio.currentTime = 0;
+        }
     }
 }
