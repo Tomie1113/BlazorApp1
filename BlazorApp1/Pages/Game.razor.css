@@ -110,6 +110,19 @@
     z-index: 9998 !important;
 }
 
+.error-modal {
+    width: auto;
+    height: auto;
+    min-width: 20vw;
+    max-width: 80vw;
+    padding: 20px;
+    border: 2px solid #cc0000;
+    background: #fff2f2;
+    color: #5a0000;
+    box-shadow: 0px 6px 20px rgba(200, 0, 0, 0.3);
+    font-family: 'Segoe UI', sans-serif; /* Optional: use different font for contrast */
+}
+
 .modal1,
 .modal_settings {
     position: fixed !important;
@@ -171,6 +184,20 @@
         background-repeat: no-repeat;
         background-size: 50% 100%; /* заменяется динамически через JS */
     }
+
+    .error-modal {
+        width: auto;
+        height: auto;
+        min-width: 20vw;
+        max-width: 80vw;
+        padding: 20px;
+        border: 2px solid #cc0000;
+        background: #fff2f2;
+        color: #5a0000;
+        box-shadow: 0px 6px 20px rgba(200, 0, 0, 0.3);
+        font-family: 'Segoe UI', sans-serif; /* Optional: use different font for contrast */
+    }
+    
 
         /* Для Chrome */
         .modal_settings input[type="range"]::-webkit-slider-thumb {
@@ -250,6 +277,19 @@
             .modal1 button:last-child:hover {
                 background-color: #f8f8f8 !important;
             }
+
+        /* Кнопка закрытия */
+        .modal1 .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: #8B4513;
+            cursor: pointer;
+            font-weight: bold;
+        }    
 input[type="range"] {
     appearance: none !important;
     height: 10px !important;

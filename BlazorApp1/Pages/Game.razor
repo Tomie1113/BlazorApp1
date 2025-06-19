@@ -16,6 +16,7 @@
         showSettings = false;
         showShop = true;
         showMyFlowers = false;
+        showShopError = false;
 
         await LoadShopFlowers(); // теперь await
         StateHasChanged();
@@ -23,19 +24,23 @@
     private bool ShowCoinNotification = false;
     private string CoinMessage = "";
     private bool IsPositiveCoin = true;
-    // private async Task ShowCoinChange(int delta, string sound = "defaultSound")
-    // {
-    //     if (delta == 0) return;
+    private string shopTitleMessage = "";
+    private string shopErrorMessage = "";
+    private string zeroFlowersMessage = "";
+    private async Task ShowCoinChange(int delta, string sound = "defaultSound")
+    {
+         if (delta == 0) return;
 
-    //     IsPositiveCoin = delta > 0;
-    //     CoinMessage = IsPositiveCoin ? $"+{delta} монет" : $"-{Math.Abs(delta)} монет";
-    //     ShowCoinNotification = true;
+         IsPositiveCoin = delta > 0;
+         CoinMessage = IsPositiveCoin ? $"+{delta} монет" : $"-{Math.Abs(delta)} монет";
+         ShowCoinNotification = true;
 
-    //     _ = JSRuntime.InvokeVoidAsync("playSound", sound);
+         _ = JSRuntime.InvokeVoidAsync("playSound", sound);
 
-    //     StateHasChanged();
-    //     _ = HideCoinNotificationAfterDelay(1500);
-    // }
+         StateHasChanged();
+         _ = HideCoinNotificationAfterDelay(1500);
+     }
+  
     private async Task ShowCoinChange(int delta, string sound = "defaultSound")
     {
         try
@@ -109,7 +114,13 @@
     private async void BuyFlower(Flower flower)
     {
         if (UserSession.CurrentUser.Coins < flower.PriceBuy)
+        {
+            showShop = false;
+            showShopError = true;
+            shopTitleMessage = "Недостаточно средств";
+            shopErrorMessage = "У Вас недостаточно монет. Продайте свои цветы или отвечайте на вопросы правильно и получайте вознаграждение!";
             return;
+        }
 
         var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
         using var conn = new MySqlConnection(connStr);
@@ -119,7 +130,13 @@
         var usedSlots = UserSession.CurrentUser.Flowers.Select(f => f.Slot).ToHashSet();
         int freeSlot = Enumerable.Range(0, 6).FirstOrDefault(i => !usedSlots.Contains(i));
         if (usedSlots.Count >= 6)
+        {
+            showShop = false;
+            showShopError = true;
+            shopTitleMessage = "Отсутствие мест";
+            shopErrorMessage = "У Вас нет свободных мест для цветов.\nВырастите и продайте цветы, чтобы посадить новые!";
             return;
+        }
 
         // Добавить цветок в БД
         var insertCmd = new MySqlCommand("INSERT INTO flowers (user_id, type_id, hp, pot_slot) VALUES (@uid, @type, @hp, @slot)", conn);
@@ -178,6 +195,7 @@
     bool showSettings = false;
     bool showShop = false;
     bool showMyFlowers = false;
+    bool showShopError = false;
 
     void OpenSettings()
     {
@@ -226,7 +244,7 @@
         UserSession.CurrentUser = null;
 
         // 4. Перейти на страницу регистрации
-        Navigation.NavigateTo("/registration", true);
+        Navigation.NavigateTo("/registration", forceLoad: true);
     }
 
     private string selectedLanguage;
@@ -248,9 +266,7 @@
     {
         // Place your callback logic here.
         // For example, navigating to the SetCulture page:
-        Navigation.NavigateTo(
-            $"/SetCulture?culture={selectedLanguage}&returnUrl={Navigation.ToBaseRelativePath(Navigation.Uri)}",
-            forceLoad: true);
+        Navigation.NavigateTo($"/SetCulture?culture={selectedLanguage}&returnUrl={Navigation.ToBaseRelativePath(Navigation.Uri)}", forceLoad: true);
     }
 
     private int musicVolume = 50;
@@ -720,55 +736,72 @@
         </div>
     }
 
-
+    @if (showShopError)
+    {
+        <div class="modal-overlay"></div>
+        <div class="modal1 error-modal show">
+            <button class="close-btn" @onclick="() => showShopError = false">×</button>
+            <h3 class="modal-title">@shopTitleMessage</h3>
+            <p>@shopErrorMessage</p>
+        </div>
+    }
 
     @if (showMyFlowers)
     {
         <div class="modal1">
             <h3>@Localizer["FlowerHeadder"]</h3>
             <div class="shop-scroll-wrapper">
-                <div class="flower-grid">
-                    @foreach (var flower in UserSession.CurrentUser.Flowers.OrderBy(f => f.Slot))
-                    {
-                        var state = flower.GetStateImage().Split('/').Last().Replace(".png", "");
-                        int sellPrice = flower.PriceSell;
+                @if (UserSession.CurrentUser.Flowers.Count > 0)
+                {
+                    <div class="flower-grid">
 
-                        switch (state)
+                        @foreach (var flower in UserSession.CurrentUser.Flowers.OrderBy(f => f.Slot))
                         {
-                            case "pre_fall": sellPrice /= 2; break;
-                            case "fall": sellPrice = 0; break;
-                            case "pre_rise": sellPrice = (int)(sellPrice * 1.5); break;
-                            case "rise": sellPrice *= 2; break;
-                        }
+                            var state = flower.GetStateImage().Split('/').Last().Replace(".png", "");
+                            int sellPrice = flower.PriceSell;
 
-                        <div class="flower-card">
-                            <img src="@flower.GetStateImage()" class="flower-img" />
-                            <div class="flower-name">@flower.DisplayName</div>
-                            <div class="flower-state">@Localizer["FlowerState"]@state</div>
-                            <div class="flower-action">
-                                @if (flower.IsDead)
-                                {
-                                    <button class="action-button throw" @onclick="() => ThrowOutFlower(flower)">
-                                        🗑
-                                        <span>@Localizer["RemovePlantTag"]</span>
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button class="action-button" @onclick="() => SellFlower(flower, sellPrice)">
-                                        @Localizer["SellPriceTag"] @sellPrice
-                                    </button>
+                            switch (state)
+                            {
+                                case "pre_fall": sellPrice /= 2; break;
+                                case "fall": sellPrice = 0; break;
+                                case "pre_rise": sellPrice = (int)(sellPrice * 1.5); break;
+                                case "rise": sellPrice *= 2; break;
+                            }
 
-                                }
+                            <div class="flower-card">
+                                <img src="@flower.GetStateImage()" class="flower-img"/>
+                                <div class="flower-name">@flower.DisplayName</div>
+                                <div class="flower-state">@Localizer["FlowerState"]@state</div>
+                                <div class="flower-action">
+                                    @if (flower.IsDead)
+                                    {
+                                        <button class="action-button throw" @onclick="() => ThrowOutFlower(flower)">
+                                            🗑
+                                            <span>@Localizer["RemovePlantTag"]</span>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="action-button" @onclick="() => SellFlower(flower, sellPrice)">
+                                            @Localizer["SellPriceTag"] @sellPrice
+                                        </button>
 
+                                    }
+
+                                </div>
                             </div>
-                        </div>
-                    }
-                </div>
-                <button class="close-full-button" @onclick="CloseModals">
-                    @Localizer["CloseButtonText"]
-                </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    zeroFlowersMessage = "У вас нет цветов, купите их в магазине!";
+                    <p>@zeroFlowersMessage</p>
+                }  
             </div>
+            <button class="close-full-button" @onclick="CloseModals">
+                @Localizer["CloseButtonText"]
+            </button>
 
         </div>
     }
