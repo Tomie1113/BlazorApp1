@@ -28,7 +28,31 @@
     private string shopTitleMessage = "";
     private string shopErrorMessage = "";
     private string zeroFlowersMessage = "";
- 
+    private int _musicVolume = 100;
+    public int MusicVolume
+    {
+        get => _musicVolume;
+        set
+        {
+            if (_musicVolume == value) return;
+            _musicVolume = value;
+            // fire‐and‐forget is fine here
+            _ = JSRuntime.InvokeVoidAsync("setMusicVolume", _musicVolume / 100.0);
+        }
+    }
+
+    private int _effectsVolume = 100;
+    public int EffectsVolume
+    {
+        get => _effectsVolume;
+        set
+        {
+            if (_effectsVolume == value) return;
+            _effectsVolume = value;
+            _ = JSRuntime.InvokeVoidAsync("setEffectsVolume", _effectsVolume / 100.0);
+        }
+    }
+
     private async Task ShowCoinChange(int delta, string sound = "defaultSound")
     {
         try
@@ -742,12 +766,12 @@
            
             <label>
                 @Localizer["MusicVolumeLabel"]
-                <input type="range" min="0" max="100" @bind="musicVolume" />
+                    <input type="range" min="0" max="100" @bind-value="MusicVolume" @bind-value:event="oninput" />
             </label>
 
             <label>
                 @Localizer["EffectsVolumeLabel"]
-                <input type="range" min="0" max="100" @bind="effectsVolume" />
+                <input type="range" min="0" max="100" @bind-value="EffectsVolume"  @bind-value:event="oninput" />
             </label>
 
             <div class="modal-buttons">

@@ -15,3 +15,14 @@ window.initAudio = function () {
         }
     }
 }
+window.setMusicVolume = function (vol) {
+    const bg = document.getElementById("backgroundMusic");
+    if (bg) bg.volume = vol;
+};
+
+window.setEffectsVolume = function (vol) {
+    ["successSound", "loseSound", "defaultSound"].forEach(id => {
+        const s = document.getElementById(id);
+        if (s) s.volume = vol;
+    });
+};

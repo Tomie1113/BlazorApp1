@@ -32,7 +32,12 @@
     <script src="_framework/blazor.server.js"></script>
 </body>
 </html>
-
+<audio id="backgroundMusic"
+       src="/audio/background-loop.mp3"
+       preload="auto"
+       autoplay
+       loop>
+</audio> 
 <script>
     function updateSliderBackground(slider) {
       const val = (slider.value - slider.min) / (slider.max - slider.min) * 100;
