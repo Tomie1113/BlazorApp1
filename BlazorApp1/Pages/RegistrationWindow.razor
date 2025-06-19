@@ -2,6 +2,8 @@
 @using MySql.Data.MySqlClient
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<RegistrationWindow> Localizer
 @using BlazorApp1.Data
 @code {
     private bool isRegistering = false;
@@ -214,12 +216,12 @@
 {
 
     <div class="login-container">
-        <h2>Увядай, если не знаешь</h2>
-        <input @bind="login" placeholder="Логин" />
-        <input @bind="password" type="password" placeholder="Пароль" />
+        <h2>@Localizer["GameTiltle"]</h2>
+        <input @bind="login" placeholder="@Localizer["LoginPlaseholder"]" />
+        <input @bind="password" type="password" placeholder="@Localizer["PasswordPlaseholder"]" />
         <div class="button-container">
-            <button @onclick="SubmitLogin">Войти</button>
-            <button @onclick="StartRegistration">Регистрация</button>
+            <button @onclick="SubmitLogin">@Localizer["SignInButton"]</button>
+            <button @onclick="StartRegistration">@Localizer["RegisterButton"]</button>
         </div>
     </div>
     <div class="background-image-container">
