@@ -8,7 +8,7 @@
 @using System.Globalization
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<Game> Localizer
-
+@inject IJSRuntime JSRuntime
 @code {
     private List<Flower> shopFlowers = new();
     async void OpenShop()
@@ -20,7 +20,30 @@
         await LoadShopFlowers(); // теперь await
         StateHasChanged();
     }
+    private bool ShowCoinNotification = false;
+    private string CoinMessage = "";
+    private bool IsPositiveCoin = true;
+    private async Task ShowCoinChange(int delta, string sound = "defaultSound")
+    {
+        if (delta == 0) return;
 
+        IsPositiveCoin = delta > 0;
+        CoinMessage = IsPositiveCoin ? $"+{delta} монет" : $"-{Math.Abs(delta)} монет";
+        ShowCoinNotification = true;
+
+        _ = JSRuntime.InvokeVoidAsync("playSound", sound);
+
+        StateHasChanged();
+        _ = HideCoinNotificationAfterDelay(1500);
+    }
+
+
+    private async Task HideCoinNotificationAfterDelay(int delayMs)
+    {
+        await Task.Delay(delayMs);
+        ShowCoinNotification = false;
+        StateHasChanged();
+    }
     private async Task LoadShopFlowers()
     {
         shopFlowers.Clear();
@@ -70,6 +93,8 @@
 
         // Обновить монеты в БД
         UserSession.CurrentUser.Coins -= flower.PriceBuy;
+        await ShowCoinChange(-flower.PriceBuy, "defaultSound");
+
         var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
         updateCoins.Parameters.AddWithValue("@coins", UserSession.CurrentUser.Coins);
         updateCoins.Parameters.AddWithValue("@id", UserSession.CurrentUser.Id);
@@ -204,6 +229,8 @@
 
         // 2. Обновить монеты пользователя
         UserSession.CurrentUser.Coins += price;
+        await ShowCoinChange(+flower.PriceBuy, "defaultSound");
+
 
         var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
         updateCoins.Parameters.AddWithValue("@coins", UserSession.CurrentUser.Coins);
@@ -272,43 +299,18 @@
 
     protected override async void OnInitialized()
     {
-        // Получаем двухбуквенный код текущей культуры.
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        //await LoadValidTypeIds();
 
-        //questionTimer = new System.Timers.Timer(1000); // стартовая задержка
-        // questionTimer.Elapsed += async (s, e) =>
-        // {
-        //     if (activeQuestions.Count >= 2)
-        //     {
-        //         questionTimer.Interval = 4000; // медленно, если 2+ активных
-        //         return;
-        //     }
-        //     else if (activeQuestions.Count == 1)
-        //     {
-        //         questionTimer.Interval = 2000; // средняя скорость
-        //     }
-        //     else
-        //     {
-        //         questionTimer.Interval = 1000; // быстро, если нет вопросов
-        //     }
-        //    await AskNextQuestion();
-        //
-        // };
+        // Слушаем первое кликовое действие
+        _ = JSRuntime.InvokeVoidAsync("eval", "document.body.addEventListener('click', () => window.initAudio(), { once: true })");
 
-        //questionTimer.AutoReset = true;
-        //questionTimer.Start();
         await LoadValidTypeIds();
-        questionTimer = new System.Timers.Timer(1000); // задаёт раз в 1 секунду
-        questionTimer.Elapsed += async (s, e) =>
-        {
-            await AskNextQuestion();
-        };
+        questionTimer = new System.Timers.Timer(1000);
+        questionTimer.Elapsed += async (s, e) => { await AskNextQuestion(); };
         questionTimer.AutoReset = true;
         questionTimer.Start();
 
-        await AskNextQuestion(); // первый вопрос сразу
-
+        await AskNextQuestion();
     }
 
     private async Task LoadValidTypeIds()
@@ -498,7 +500,7 @@
         }
     }
 
-    private void SubmitAnswer()
+    private async void SubmitAnswer()
     {
         if (currentQuestionSlot is null || !activeQuestions.TryGetValue(currentQuestionSlot.Value, out var question))
             return;
@@ -512,10 +514,12 @@
         if (selected.IsCorrect)
         {
             UserSession.CurrentUser.Coins += 5;
+            await ShowCoinChange(5, "successSound");
             flower.Hp = Math.Min(flower.Hp + 1, flower.MaxHp);
         }
         else
         {
+            await ShowCoinChange(0, "loseSound"); // монет нет, но проигрышный зву
             flower.Hp = Math.Max(0, flower.Hp - 1);
         }
 
@@ -750,5 +754,18 @@
             </div>
         }
     }
+        <script src="js/audio.js"></script>
+
+        <audio id="successSound" src="/audio/success.mp3" preload="auto"></audio>
+        <audio id="loseSound" src="/audio/lose.mp3" preload="auto"></audio>
+        <audio id="defaultSound" src="/audio/default.mp3" preload="auto"></audio>
+
+        @if (ShowCoinNotification)
+        {
+            <div class="coin-notification @(IsPositiveCoin ? "positive" : "negative")">
+                <span>@CoinMessage</span>
+            </div>
+        }
  </div>
+
  }
