@@ -15,6 +15,17 @@
     <link rel="icon" type="image/png" href="favicon.png"/>
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
 </head>
+<script>
+    const DESIGN_W = 800;
+    function updateScale() {
+      const f = document.querySelector('.game-frame');
+      if (!f) return;
+      const s = f.parentElement.clientWidth / DESIGN_W;
+      f.style.setProperty('--game-scale', s);
+    }
+    window.addEventListener('resize', updateScale);
+    window.addEventListener('load',   updateScale);
+</script>
 <body>
     <component type="typeof(App)" render-mode="ServerPrerendered" />
 
