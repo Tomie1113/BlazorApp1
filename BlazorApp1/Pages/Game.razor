@@ -478,8 +478,14 @@ private void OpenQuestionModal(int slot)
                 @foreach (var slot in new[] { 0, 1, 2 })
                 {
                     <div class="flower-slot">
+                        <!-- Горшок (должен быть внизу) -->
+                        <div class="pot-box">
+                            <img src="@GetPotImage(slot)" />
+                        </div>
+
+                        <!-- Цветок (должен быть сверху) -->
                         <div class="flower-box">
-                            <img src="@GetFlowerImage(slot)" class="flower" />
+                            <img src="@GetFlowerImage(slot)" />
                             @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
                             {
                                 <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
@@ -487,7 +493,6 @@ private void OpenQuestionModal(int slot)
                                 </div>
                             }
                         </div>
-                        <div class="pot-box" style="background-image: url('@GetPotImage(slot)');"></div>
                     </div>
                 }
             </div>
@@ -496,7 +501,7 @@ private void OpenQuestionModal(int slot)
                 {
                     <div class="flower-slot">
                         <div class="flower-box">
-                            <img src="@GetFlowerImage(slot)" class="flower" />
+                            <img src="@GetFlowerImage(slot)"  />
                             @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
                             {
                                 <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">

@@ -300,62 +300,48 @@ input[type="range"] {
     border: 2px solid rgba(0, 0, 0, 0.3) !important;
     border-radius: 8px !important;
 }
-/* Основной контейнер */
 .flower-slot {
     position: relative;
     width: 30vw;
     height: 30vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    border: 2px solid rgba(0, 0, 0, 0.3) !important;
-    border-radius: 8px !important;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-/* Контейнер для цветка */
+/* Горшок под цветком */
+.pot-box,
 .flower-box {
-    height: 75%; /* Высота контейнера */
-    width: 100%;
-    position: relative; /* Для абсолютного позиционирования .flower */
-    display: flex;
-    align-items: flex-end; /* Прижимаем к низу */
-    justify-content: center;
-    overflow: hidden; /* Обрезает всё, что выходит за границы */
-/*    border: 2px solid rgba(0, 0, 0, 0.3);
-    border-radius: 8px;*/
-}
-
-/* Сам цветок */
-.flower {
-    max-height: 100%; /* Занимает всю высоту контейнера */
-    max-width: 100%; /* Ширина подстраивается под пропорции */
-    object-fit: contain; /* Вписывает изображение целиком */
-    object-position: bottom center; /* Прижимает к низу */
-    transform: rotate(90deg); /* Сохраняем поворот */
     position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%) rotate(90deg) scale(0.8);
-    z-index: 123; /* Помещаем цветок поверх .pot-box */
-/*    border: 2px solid rgba(0, 0, 0, 0.3);
-    border-radius: 8px;*/
-}
-
-/* Горшок */
-.pot-box {
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 30%; /* Высота горшка */
-    background-position: bottom center;
-    background-repeat: no-repeat;
-    background-size: contain;
-    z-index: 1; /* Должен быть меньше, чем у .flower */
-    position: relative;
-    margin-top: -10%; /* Поднимаем вверх, чтобы перекрыть flower-box */
-/*    border: 2px solid rgba(0, 0, 0, 0.3);
-    border-radius: 8px;*/
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+.pot-box {
+    z-index: 1; /* ниже цветка */
+}
+
+    .pot-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+/* Цветок выше горшка */
+.flower-box {
+    z-index: 2; /* поверх горшка */
+}
+
+    .flower-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
 
 .flower-grid {
     display: grid;
