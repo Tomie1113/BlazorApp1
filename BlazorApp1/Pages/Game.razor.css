@@ -551,3 +551,38 @@ input[type="range"] {
         .question-modal .close-full-button:hover {
             background-color: #f5e6d0;
         }
+.coin-notification {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 1000;
+    opacity: 1;
+    animation: floatUpAndFade 1s ease forwards;
+}
+
+    .coin-notification.positive {
+        background-color: #28a745; /* Зелёный */
+    }
+
+    .coin-notification.negative {
+        background-color: #dc3545; /* Красный */
+    }
+
+@@keyframes floatUpAndFade {
+    from {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translate(-50%, -100px);
+        opacity: 0;
+    }
+}
