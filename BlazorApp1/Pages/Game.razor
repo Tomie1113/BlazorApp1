@@ -168,11 +168,8 @@
         await conn.OpenAsync();
 
         // 1. Удалить цветок из таблицы
-        var deleteCmd = new MySqlCommand("DELETE FROM flowers WHERE user_id = @uid AND type_id = @type AND hp = @hp AND pot_slot = @slot LIMIT 1", conn);
-        deleteCmd.Parameters.AddWithValue("@uid", UserSession.CurrentUser.Id);
-        deleteCmd.Parameters.AddWithValue("@type", flower.TypeId);
-        deleteCmd.Parameters.AddWithValue("@hp", flower.Hp);
-        deleteCmd.Parameters.AddWithValue("@slot", flower.Slot);
+        var deleteCmd = new MySqlCommand("DELETE FROM flowers WHERE id = @id LIMIT 1", conn);
+        deleteCmd.Parameters.AddWithValue("@id", flower.Id);
         await deleteCmd.ExecuteNonQueryAsync();
 
         // 2. Обновить монеты пользователя
