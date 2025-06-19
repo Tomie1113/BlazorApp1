@@ -13,6 +13,7 @@
     private List<Flower> shopFlowers = new();
     async void OpenShop()
     {
+        await ShowCoinChange(-1, "defaultSound");
         showSettings = false;
         showShop = true;
         showMyFlowers = false;
@@ -32,11 +33,30 @@
     {
         try
         {
+            if (delta == -1)
+            {
+                // ShowCoinNotification = true;
+                // await InvokeAsync(StateHasChanged);
+
+                // // 🔊 Проигрываем звук
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("playSound", sound);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка воспроизведения звука: {ex.Message}");
+                }
+                // await Task.Delay(600);
+                // ShowCoinNotification = false;
+                // await InvokeAsync(StateHasChanged);
+                return;
+            }
             if (delta == 0)
             {
                 // ❌ Неверный ответ
                 IsPositiveCoin = false;
-                CoinMessage = "Ответ неверный";
+                CoinMessage = "Ответ неверный!";
             }
             else
             {
@@ -184,24 +204,27 @@
     bool showMyFlowers = false;
     bool showShopError = false;
 
-    void OpenSettings()
+    async void OpenSettings()
     {
+        await ShowCoinChange(-1, "defaultSound");
         showSettings = true;
         showShop = false;
         showMyFlowers = false;
         StateHasChanged();
     }
 
-    void OpenMyFlowers()
+    async void OpenMyFlowers()
     {
+        await ShowCoinChange(-1, "defaultSound");
         showSettings = false;
         showShop = false;
         showMyFlowers = true;
         StateHasChanged();
     }
 
-    void CloseModals()
+    async void CloseModals()
     {
+        await ShowCoinChange(-1, "defaultSound");
         showSettings = false;
         showShop = false;
         showMyFlowers = false;
@@ -340,22 +363,60 @@
         public bool IsCorrect { get; set; }
     }
 
+    // protected override async void OnInitialized()
+    // {
+    //     selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    //     // Слушаем первое кликовое действие
+    //     _ = JSRuntime.InvokeVoidAsync("eval", "document.body.addEventListener('click', () => window.initAudio(), { once: true })");
+
+    //     await LoadValidTypeIds();
+    //     questionTimer = new System.Timers.Timer(1000);
+    //     questionTimer.Elapsed += async (s, e) => { await AskNextQuestion(); };
+    //     questionTimer.AutoReset = true;
+    //     questionTimer.Start();
+
+    //     await AskNextQuestion();
+    // }
     protected override async void OnInitialized()
     {
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
-        // Слушаем первое кликовое действие
         _ = JSRuntime.InvokeVoidAsync("eval", "document.body.addEventListener('click', () => window.initAudio(), { once: true })");
 
         await LoadValidTypeIds();
-        questionTimer = new System.Timers.Timer(1000);
-        questionTimer.Elapsed += async (s, e) => { await AskNextQuestion(); };
-        questionTimer.AutoReset = true;
-        questionTimer.Start();
 
-        await AskNextQuestion();
+        questionTimer = new System.Timers.Timer();
+        questionTimer.Elapsed += async (s, e) => await HandleTimerTick();
+        questionTimer.AutoReset = false;
+        AdjustTimerInterval();
     }
 
+    private async Task HandleTimerTick()
+    {
+        await AskNextQuestion();
+        AdjustTimerInterval();  // пересчёт после каждого тика
+    }
+    private void AdjustTimerInterval()
+    {
+        int activeCount = activeQuestions.Values.Count(q => q != null);
+
+        double newInterval;
+
+        if (activeCount == 0)
+            newInterval = 1000;
+        else if (activeCount == 1)
+            newInterval = 1500;
+        else if (activeCount == 2)
+            newInterval = 3000;
+        else if (activeCount == 3)
+            newInterval = 5000;
+        else
+            newInterval = 7000;
+
+        questionTimer.Interval = newInterval;
+        questionTimer.Start();
+    }
     private async Task LoadValidTypeIds()
     {
         try
@@ -485,8 +546,9 @@
     }
 
 
-    private void OpenQuestionModal(int slot)
+    private async void OpenQuestionModal(int slot)
     {
+        await ShowCoinChange(-1, "defaultSound");
         if (UserSession.CurrentUser == null)
         {
             Debug.WriteLine($"⛔ Cannot open modal: user is null");
@@ -512,8 +574,9 @@
         StateHasChanged();
     }
 
-    private void CloseQuestionModal()
+    private async void CloseQuestionModal()
     {
+        await ShowCoinChange(-1, "defaultSound");
         currentQuestionSlot = null;
         selectedAnswerId = null;
         StateHasChanged();
@@ -603,7 +666,7 @@
                             @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
                             {
                                 <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
-                                    ❓
+                                    ?
                                 </div>
                             }
                         </div>
@@ -627,7 +690,7 @@
                             @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
                             {
                                 <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
-                                    ❓
+                                    ?
                                 </div>
                             }
                         </div>
@@ -695,33 +758,33 @@
     }
 
 
-    @if (showShop)
-    {
-        <div class="modal1">
-            <h3>@Localizer["StoreHeader"]</h3>
+        @if (showShop)
+        {
+            <div class="modal1">
+                <h3>@Localizer["StoreHeader"]</h3>
 
-            <div class="shop-scroll-wrapper">
-                <div class="flower-grid">
-                    @foreach (var flower in shopFlowers)
-                    {
-                        <div class="flower-card">
-                            <img src="/images/flowers/@flower.CodeName/standart.png" class="flower-img" />
-                            <div class="flower-name">@flower.DisplayName</div>
-                            <div class="flower-action">
-                                <button class="action-button" @onclick="() => BuyFlower(flower)">
-                                    @Localizer["BuyPriceTag"]@flower.PriceBuy
-                                </button>
+                <div class="shop-scroll-wrapper">
+                    <div class="flower-grid">
+                        @foreach (var flower in shopFlowers)
+                        {
+                            <div class="flower-card">
+                                <img src="/images/flowers_shop/@flower.CodeName/rise.png" class="flower-img" />
+                                <div class="flower-name">@flower.DisplayName</div>
+                                <div class="flower-action">
+                                    <button class="action-button" @onclick="@(async () => { BuyFlower(flower); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                                        @Localizer["BuyPriceTag"]@flower.PriceBuy
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
-            </div>
 
-            <button class="close-full-button" @onclick="CloseModals">
-                @Localizer["CloseButtonText"]
-            </button>
-        </div>
-    }
+                <button class="close-full-button" @onclick="@(async () => { CloseModals(); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                    @Localizer["CloseButtonText"]
+                </button>
+            </div>
+        }
 
     @if (showShopError)
     {
@@ -817,7 +880,7 @@
             </div>
         }
     }
-        <script src="js/audio.js"></script>
+        <script src="audio.js"></script>
 
         <audio id="successSound" src="/audio/success.mp3" preload="auto"></audio>
         <audio id="loseSound" src="/audio/lose.mp3" preload="auto"></audio>
