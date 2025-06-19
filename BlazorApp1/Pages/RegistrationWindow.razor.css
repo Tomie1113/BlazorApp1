@@ -92,6 +92,10 @@
     z-index: 1000;
 }
 
+.modal.error-modal {
+    display: block;
+}
+
 /* Модальное окно */
 .modal {
     display: none;

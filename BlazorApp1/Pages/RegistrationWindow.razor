@@ -222,9 +222,9 @@
 @if (showError)
 {
     <div class="modal-overlay"></div>
-    <div class="modal show">
+    <div class="modal error-modal">
         <button class="close-btn" @onclick="() => showError = false">×</button>
-        <h3 class="modal-title">Ошибка входа</h3>
+        <h3 class="modal-title">@Localizer["EntryError"]</h3>
         <p>@errorMessage</p>
     </div>
 }
