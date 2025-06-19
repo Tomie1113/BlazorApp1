@@ -23,19 +23,7 @@
     private bool ShowCoinNotification = false;
     private string CoinMessage = "";
     private bool IsPositiveCoin = true;
-    // private async Task ShowCoinChange(int delta, string sound = "defaultSound")
-    // {
-    //     if (delta == 0) return;
 
-    //     IsPositiveCoin = delta > 0;
-    //     CoinMessage = IsPositiveCoin ? $"+{delta} монет" : $"-{Math.Abs(delta)} монет";
-    //     ShowCoinNotification = true;
-
-    //     _ = JSRuntime.InvokeVoidAsync("playSound", sound);
-
-    //     StateHasChanged();
-    //     _ = HideCoinNotificationAfterDelay(1500);
-    // }
     private async Task ShowCoinChange(int delta, string sound = "defaultSound")
     {
         try
@@ -337,22 +325,60 @@
         public bool IsCorrect { get; set; }
     }
 
+    // protected override async void OnInitialized()
+    // {
+    //     selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    //     // Слушаем первое кликовое действие
+    //     _ = JSRuntime.InvokeVoidAsync("eval", "document.body.addEventListener('click', () => window.initAudio(), { once: true })");
+
+    //     await LoadValidTypeIds();
+    //     questionTimer = new System.Timers.Timer(1000);
+    //     questionTimer.Elapsed += async (s, e) => { await AskNextQuestion(); };
+    //     questionTimer.AutoReset = true;
+    //     questionTimer.Start();
+
+    //     await AskNextQuestion();
+    // }
     protected override async void OnInitialized()
     {
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
-        // Слушаем первое кликовое действие
         _ = JSRuntime.InvokeVoidAsync("eval", "document.body.addEventListener('click', () => window.initAudio(), { once: true })");
 
         await LoadValidTypeIds();
-        questionTimer = new System.Timers.Timer(1000);
-        questionTimer.Elapsed += async (s, e) => { await AskNextQuestion(); };
-        questionTimer.AutoReset = true;
-        questionTimer.Start();
 
-        await AskNextQuestion();
+        questionTimer = new System.Timers.Timer();
+        questionTimer.Elapsed += async (s, e) => await HandleTimerTick();
+        questionTimer.AutoReset = false;
+        AdjustTimerInterval();
     }
 
+    private async Task HandleTimerTick()
+    {
+        await AskNextQuestion();
+        AdjustTimerInterval();  // пересчёт после каждого тика
+    }
+    private void AdjustTimerInterval()
+    {
+        int activeCount = activeQuestions.Values.Count(q => q != null);
+
+        double newInterval;
+
+        if (activeCount == 0)
+            newInterval = 1000;
+        else if (activeCount == 1)
+            newInterval = 1500;
+        else if (activeCount == 2)
+            newInterval = 3000;
+        else if (activeCount == 3)
+            newInterval = 5000;
+        else
+            newInterval = 7000;
+
+        questionTimer.Interval = newInterval;
+        questionTimer.Start();
+    }
     private async Task LoadValidTypeIds()
     {
         try
@@ -600,7 +626,7 @@
                             @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
                             {
                                 <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
-                                    ❓
+                                    ?
                                 </div>
                             }
                         </div>
@@ -624,7 +650,7 @@
                             @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
                             {
                                 <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
-                                    ❓
+                                    ?
                                 </div>
                             }
                         </div>
@@ -702,7 +728,7 @@
                     @foreach (var flower in shopFlowers)
                     {
                         <div class="flower-card">
-                            <img src="/images/flowers/@flower.CodeName/standart.png" class="flower-img" />
+                            <img src="/images/flowers_shop/@flower.CodeName/rise.png" class="flower-img" />
                             <div class="flower-name">@flower.DisplayName</div>
                             <div class="flower-action">
                                 <button class="action-button" @onclick="() => BuyFlower(flower)">
