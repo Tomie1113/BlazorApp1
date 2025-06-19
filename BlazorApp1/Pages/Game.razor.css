@@ -7,8 +7,11 @@
 }
 
 .game-container {
-    position: relative;
-    width: 100vmin;
+    position: relative; /* anchor for all absolutely-positioned kids */
+    aspect-ratio: 5 / 4;
+    min-width: 400px;
+    min-height: 320px;
+    height: calc(min(90vmin, 800px) * 0.8);
     height: 80vmin;
     background: url('/images/background/background.png') center/cover no-repeat;
     overflow: hidden;
@@ -36,7 +39,7 @@
 
 }
 
-.money-container {
+.game-container .money-container {
     position: absolute;
     height: 5vh;
     top: 1rem;
@@ -49,13 +52,13 @@
     z-index: 100;
 }
 
-.money-icon {
+.game-container .money-icon {
     width: 5.5vh;
     height: auto;
     transform: rotate(90deg);
 }
 
-.money-amount {
+.game-container .money-amount {
     position: absolute;
     top: 5%;
     left: 30%;
@@ -511,40 +514,20 @@ input[type="range"] {
         background-color: #8B4513;
         border-radius: 6px;
     }
-/* Анимация появления */
-@keyframes bubbleAppear {
-    0% {
-        opacity: 0;
-        transform: translateX(-50%) scale(0.3);
-    }
 
-    100% {
-        opacity: 1;
-        transform: translateX(-50%) scale(1);
-    }
-}
-
-.question-bubble {
+.game-container .question-bubble {
     position: absolute;
-    top: -17px;
+    top: 2vmin;
     left: 50%;
-    transform: translateX(-50%);
-    width: 60px;
-    height: 60px;
+    transform: translateX(-50%) scale(1);
+    padding: 1vmin 2vmin;
+    font-size: 3vmin;
     background: #fdf5c2;
-    border: 3px solid #8B4513;
-    border-radius: 50%; /* полная круглая форма */
-    font-weight: bold;
-    font-size: 32px;
-    color: #8B4513;
-    text-align: center;
-    line-height: 60px; /* вертикально центрируем текст */
-    cursor: pointer;
+    border: 2px solid #8B4513;
+    border-radius: 20px;
     z-index: 50;
-    box-shadow: 0 0 8px rgba(0,0,0,0.3);
-    opacity: 0;
-    animation: bubbleAppear 0.4s ease-out forwards;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    /* nothing else in your CSS will catch it */
+
 }
 
     /* Эффект при наведении: увеличиваем полностью весь пузырёк */
