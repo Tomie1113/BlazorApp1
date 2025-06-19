@@ -11,7 +11,6 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender || _navigated) return;
-
         try
         {
             var token = await JS.InvokeAsync<string>("localStorage.getItem", "auth_token");

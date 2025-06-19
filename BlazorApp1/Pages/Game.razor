@@ -22,13 +22,55 @@
         await LoadShopFlowers(); // теперь await
         StateHasChanged();
     }
+    private bool _initialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialized)
+        {
+            _initialized = true;
+
+            await JSRuntime.InvokeVoidAsync("eval",
+                @"document.body.addEventListener(
+                'click',
+                () => window.initAudio(),
+                { once: true }
+              );");
+        }
+    }
     private bool ShowCoinNotification = false;
     private string CoinMessage = "";
     private bool IsPositiveCoin = true;
     private string shopTitleMessage = "";
     private string shopErrorMessage = "";
     private string zeroFlowersMessage = "";
- 
+    private int _musicVolume = 100;
+    public int MusicVolume
+    {
+        get => _musicVolume;
+        set
+        {
+            if (_musicVolume == value) return;
+            _musicVolume = value;
+            _ = JSRuntime.InvokeVoidAsync("setMusicVolume", _musicVolume / 100.0);
+            _ = JSRuntime.InvokeVoidAsync("saveVolumePrefs", _musicVolume, _effectsVolume);
+
+        }
+    }
+
+    private int _effectsVolume = 100;
+    public int EffectsVolume
+    {
+        get => _effectsVolume;
+        set
+        {
+            if (_effectsVolume == value) return;
+            _effectsVolume = value;
+            _ = JSRuntime.InvokeVoidAsync("setEffectsVolume", _effectsVolume / 100.0);
+            _ = JSRuntime.InvokeVoidAsync("saveVolumePrefs", _musicVolume, _effectsVolume);
+        }
+    }
+
     private async Task ShowCoinChange(int delta, string sound = "defaultSound")
     {
         try
@@ -396,7 +438,14 @@
     {
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
-        _ = JSRuntime.InvokeVoidAsync("eval", "document.body.addEventListener('click', () => window.initAudio(), { once: true })");
+        var req = httpContextAccessor.HttpContext?.Request;
+        if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
+            int.TryParse(mvStr, out var mv))
+            MusicVolume = mv;
+
+        if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
+            int.TryParse(evStr, out var ev))
+            EffectsVolume = ev;
 
         await LoadValidTypeIds();
 
@@ -405,6 +454,7 @@
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
     }
+
 
     private async Task HandleTimerTick()
     {
@@ -779,12 +829,12 @@
            
             <label>
                 @Localizer["MusicVolumeLabel"]
-                <input type="range" min="0" max="100" @bind="musicVolume" />
+                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="MusicVolume" @bind-value:event="oninput" />
             </label>
 
             <label>
                 @Localizer["EffectsVolumeLabel"]
-                <input type="range" min="0" max="100" @bind="effectsVolume" />
+                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="EffectsVolume" @bind-value:event="oninput" />
             </label>
 
             <div class="modal-buttons">

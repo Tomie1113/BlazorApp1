@@ -15,3 +15,19 @@ window.initAudio = function () {
         }
     }
 }
+window.setMusicVolume = function (vol) {
+    const bg = document.getElementById("backgroundMusic");
+    if (bg) bg.volume = vol;
+};
+
+window.setEffectsVolume = function (vol) {
+    ["successSound", "loseSound", "defaultSound"].forEach(id => {
+        const s = document.getElementById(id);
+        if (s) s.volume = vol;
+    });
+};
+
+window.saveVolumePrefs = function (musicVol, effectsVol) {
+    document.cookie = `musicVolume=${musicVol}; path=/; max-age=2592000`;  // 30 days
+    document.cookie = `effectsVolume=${effectsVol}; path=/; max-age=2592000`;
+};
