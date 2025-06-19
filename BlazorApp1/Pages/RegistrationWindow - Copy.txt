@@ -15,10 +15,6 @@
     private string regEmail;
     private string regPassword;
 
-    private bool showError = false;
-    private string errorMessage = "";
-
-
     private void StartRegistration()
     {
         isRegistering = true;
@@ -46,8 +42,7 @@
                 var storedHash = reader.GetString(2);
                 if (storedHash != hash)
                 {
-                    showError = true;
-                    errorMessage = "❌ Неверный пароль";
+                    debug = "❌ Неверный пароль";
                     return;
                 }
 
@@ -79,9 +74,6 @@
             else
             {
                 debug = "❌ Пользователь не найден";
-                showError = true;
-                errorMessage = debug;
-
             }
         }
         catch (Exception ex)
@@ -219,15 +211,7 @@
 
 }
 
-@if (showError)
-{
-    <div class="modal-overlay"></div>
-    <div class="modal show">
-        <button class="close-btn" @onclick="() => showError = false">×</button>
-        <h3 class="modal-title">Ошибка входа</h3>
-        <p>@errorMessage</p>
-    </div>
-}
+
 @if (!isRegistering)
 {
     <div class="login-background">
