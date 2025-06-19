@@ -5,16 +5,25 @@
     }
 }
 window.initAudio = function () {
+    const bg = document.getElementById("backgroundMusic");
+    if (bg) {
+        bg.muted = false;
+        bg.play().catch(err => {
+            console.warn("Background music play failed:", err);
+        });
+    }
+
+    // Preload sound effects to satisfy browser policies
     const sounds = ["successSound", "loseSound", "defaultSound"];
     for (const id of sounds) {
         const audio = document.getElementById(id);
         if (audio) {
-            audio.play().catch(() => { }); // пытаемся воспроизвести чтобы браузер дал разрешение
+            audio.play().catch(() => { });
             audio.pause();
             audio.currentTime = 0;
         }
     }
-}
+};
 window.setMusicVolume = function (vol) {
     const bg = document.getElementById("backgroundMusic");
     if (bg) bg.volume = vol;
