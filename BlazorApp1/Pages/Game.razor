@@ -23,21 +23,59 @@
     private bool ShowCoinNotification = false;
     private string CoinMessage = "";
     private bool IsPositiveCoin = true;
+    // private async Task ShowCoinChange(int delta, string sound = "defaultSound")
+    // {
+    //     if (delta == 0) return;
+
+    //     IsPositiveCoin = delta > 0;
+    //     CoinMessage = IsPositiveCoin ? $"+{delta} монет" : $"-{Math.Abs(delta)} монет";
+    //     ShowCoinNotification = true;
+
+    //     _ = JSRuntime.InvokeVoidAsync("playSound", sound);
+
+    //     StateHasChanged();
+    //     _ = HideCoinNotificationAfterDelay(1500);
+    // }
     private async Task ShowCoinChange(int delta, string sound = "defaultSound")
     {
-        if (delta == 0) return;
+        try
+        {
+            if (delta == 0)
+            {
+                // ❌ Неверный ответ
+                IsPositiveCoin = false;
+                CoinMessage = "Ответ неверный";
+            }
+            else
+            {
+                // ✅ Верный ответ / покупка / продажа
+                IsPositiveCoin = delta > 0;
+                CoinMessage = IsPositiveCoin ? $"+{delta} монет" : $"-{Math.Abs(delta)} монет";
+            }
 
-        IsPositiveCoin = delta > 0;
-        CoinMessage = IsPositiveCoin ? $"+{delta} монет" : $"-{Math.Abs(delta)} монет";
-        ShowCoinNotification = true;
+            ShowCoinNotification = true;
+            await InvokeAsync(StateHasChanged);
 
-        _ = JSRuntime.InvokeVoidAsync("playSound", sound);
+            // 🔊 Проигрываем звук
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("playSound", sound);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка воспроизведения звука: {ex.Message}");
+            }
 
-        StateHasChanged();
-        _ = HideCoinNotificationAfterDelay(1500);
+            // ⏱️ Уменьшаем задержку до 600 мс вместо 1500
+            await Task.Delay(600);
+            ShowCoinNotification = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка в ShowCoinChange: {ex.Message}");
+        }
     }
-
-
     private async Task HideCoinNotificationAfterDelay(int delayMs)
     {
         await Task.Delay(delayMs);
@@ -477,7 +515,7 @@
         selectedAnswerId = null;
         StateHasChanged();
     }
-    private async void UpdateFlowerAndCoins(Flower flower)
+    private async Task UpdateFlowerAndCoins(Flower flower)
     {
         try
         {
@@ -485,10 +523,9 @@
             using var conn = new MySqlConnection(connStr);
             await conn.OpenAsync();
 
-            var updateHp = new MySqlCommand("UPDATE flowers SET hp = @hp WHERE user_id = @uid AND pot_slot = @slot", conn);
+            var updateHp = new MySqlCommand("UPDATE flowers SET hp = @hp WHERE id = @fid", conn);
             updateHp.Parameters.AddWithValue("@hp", flower.Hp);
-            updateHp.Parameters.AddWithValue("@uid", UserSession.CurrentUser.Id);
-            updateHp.Parameters.AddWithValue("@slot", flower.Slot);
+            updateHp.Parameters.AddWithValue("@fid", flower.Id);
             await updateHp.ExecuteNonQueryAsync();
 
             var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
@@ -502,7 +539,7 @@
         }
     }
 
-    private async void SubmitAnswer()
+    private async Task SubmitAnswer()
     {
         if (currentQuestionSlot is null || !activeQuestions.TryGetValue(currentQuestionSlot.Value, out var question))
             return;
@@ -516,17 +553,19 @@
         if (selected.IsCorrect)
         {
             UserSession.CurrentUser.Coins += 5;
-            await ShowCoinChange(5, "successSound");
             flower.Hp = Math.Min(flower.Hp + 1, flower.MaxHp);
+            await UpdateFlowerAndCoins(flower); // пишем в БД сразу после изменения
+            await ShowCoinChange(5, "successSound");
         }
         else
         {
-            await ShowCoinChange(0, "loseSound"); // монет нет, но проигрышный зву
             flower.Hp = Math.Max(0, flower.Hp - 1);
+            await UpdateFlowerAndCoins(flower);
+            await ShowCoinChange(0, "loseSound");
         }
 
         // 🛠️ Обновление в БД
-        UpdateFlowerAndCoins(flower);
+        await UpdateFlowerAndCoins(flower);
 
         activeQuestions.Remove(currentQuestionSlot.Value);
         CloseQuestionModal();
@@ -545,7 +584,8 @@
 <div class="game-wrapper">
     <div class="game-container">
         <div class="game-field">
-            <div class="shelf">            
+            <div class="shelf"> 
+                    <div class="shelf-background"></div>  <!-- добавляем фон полки -->
                 @foreach (var slot in new[] { 0, 1, 2 })
                 {
                     <div class="flower-slot">
@@ -569,6 +609,7 @@
                  }
             </div>
             <div class="shelf">
+                <div class="shelf-background"></div>  <!-- добавляем фон полки -->
                 @foreach (var slot in new[] { 3, 4, 5 })
                 {
                     <div class="flower-slot">
@@ -764,7 +805,11 @@
 
         @if (ShowCoinNotification)
         {
-            <div class="coin-notification @(IsPositiveCoin ? "positive" : "negative")">
+@*             <div class="coin-notification @(IsPositiveCoin ? "positive" : "negative")">
+                <span>@CoinMessage</span>
+            </div> *@
+            <div class="coin-notification
+            @(ShowCoinNotification ? (IsPositiveCoin ? "positive show" : "negative show") : "")">
                 <span>@CoinMessage</span>
             </div>
         }
