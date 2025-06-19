@@ -575,7 +575,7 @@
             </div> *@
         </div>
     </div>
-
+        <!-- Модальные окна -->
     <!-- Модальные окна -->
     @if (showSettings || showShop || showMyFlowers)
     {
@@ -693,6 +693,7 @@
 
         </div>
     }
+
     @if (currentQuestionSlot != null && activeQuestions.ContainsKey(currentQuestionSlot.Value))
     {
         var question = activeQuestions[currentQuestionSlot.Value];
