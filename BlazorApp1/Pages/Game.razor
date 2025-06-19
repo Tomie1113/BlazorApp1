@@ -1,9 +1,13 @@
 ﻿@page "/main"
 @using BlazorApp1.Data
+@using Microsoft.AspNetCore.Localization
 @using MySql.Data.MySqlClient
 @using System.Diagnostics;
 @inject NavigationManager Navigation
-
+@inject IHttpContextAccessor httpContextAccessor
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Game> Localizer
 
 @code {
     private List<Flower> shopFlowers = new();
@@ -140,6 +144,34 @@
         UserSession.CurrentUser = null;
         Navigation.NavigateTo("/registration", true);
     }
+
+    private string selectedLanguage;
+
+    private string SelectedLanguage
+    {
+        get => selectedLanguage;
+        set
+        {
+            if (selectedLanguage != value)
+            {
+                selectedLanguage = value;
+                OnLanguageChanged();
+            }
+        }
+    }
+
+    private void OnLanguageChanged()
+    {
+        // Place your callback logic here.
+        // For example, navigating to the SetCulture page:
+        Navigation.NavigateTo(
+            $"/SetCulture?culture={selectedLanguage}&returnUrl={Navigation.ToBaseRelativePath(Navigation.Uri)}",
+            forceLoad: true);
+    }
+
+    private int musicVolume = 50;
+    private int effectsVolume = 50;
+
     private async void SellFlower(Flower flower, int price)
     {
         var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
@@ -197,6 +229,8 @@
 
     protected override async void OnInitialized()
     {
+        // Получаем двухбуквенный код текущей культуры.
+        selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         //await LoadValidTypeIds();
 
         //questionTimer = new System.Timers.Timer(1000); // стартовая задержка
@@ -222,7 +256,6 @@
         //questionTimer.AutoReset = true;
         //questionTimer.Start();
         await LoadValidTypeIds();
-
         questionTimer = new System.Timers.Timer(1000); // задаёт раз в 1 секунду
         questionTimer.Elapsed += async (s, e) =>
         {
@@ -540,29 +573,30 @@ private void OpenQuestionModal(int slot)
     @if (showSettings)
     {
         <div class="modal_settings">
-            <h2>Настройки</h2>
+            <h2>@Localizer["SettingsHeader"]</h2>
 
             <label>
-                Язык:
-                <select>
-                    <option>Русский</option>
-                    <option>English</option>
+                @Localizer["LanguageLabel"]
+                <select @bind="SelectedLanguage">
+                    <option value="ru">@Localizer["RussianOption"]</option>
+                    <option value="en">@Localizer["EnglishOption"]</option>
                 </select>
             </label>
 
+           
             <label>
-                Громкость музыки:
-                <input type="range" min="0" max="100" />
+                @Localizer["MusicVolumeLabel"]
+                <input type="range" min="0" max="100" @bind="musicVolume" />
             </label>
 
             <label>
-                Громкость эффектов:
-                <input type="range" min="0" max="100" />
+                @Localizer["EffectsVolumeLabel"]
+                <input type="range" min="0" max="100" @bind="effectsVolume" />
             </label>
 
             <div class="modal-buttons">
-                <button @onclick="GoToLogin">Выйти</button>
-                <button @onclick="CloseModals">Закрыть</button>
+                <button @onclick="GoToLogin">@Localizer["LogoutButtonText"]</button>
+                <button @onclick="CloseModals">@Localizer["CloseButtonText"]</button>
             </div>
         </div>
     }
@@ -571,7 +605,7 @@ private void OpenQuestionModal(int slot)
     @if (showShop)
     {
         <div class="modal1">
-            <h3>Магазин</h3>
+            <h3>@Localizer["StoreHeader"]</h3>
 
             <div class="shop-scroll-wrapper">
                 <div class="flower-grid">
@@ -601,7 +635,7 @@ private void OpenQuestionModal(int slot)
     @if (showMyFlowers)
     {
         <div class="modal1">
-            <h3>Мои цветы</h3>
+            <h3>@Localizer["FlowerHeadder"]</h3>
             <div class="shop-scroll-wrapper">
                 <div class="flower-grid">
                     @foreach (var flower in UserSession.CurrentUser.Flowers.OrderBy(f => f.Slot))
@@ -654,7 +688,7 @@ private void OpenQuestionModal(int slot)
         if (question != null)
         {
             <div class="question-modal">
-                <h3>Вопрос</h3>
+                <h3>@Localizer["QestionHeader"]</h3>
                 <p>@question.Content</p>
 
                 @foreach (var answer in question.Answers)

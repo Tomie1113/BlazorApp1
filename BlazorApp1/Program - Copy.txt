@@ -10,20 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add localization services and specify the resource folder (e.g., "Resources")
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
-builder.Services.AddHttpContextAccessor();
-
 // Razor Pages и Blazor
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-
-builder.Services.Configure<RequestLocalizationOptions>(options =>
-{
-    var supportedCultures = new[] { new CultureInfo("ru"), new CultureInfo("en") };
-    options.DefaultRequestCulture = new RequestCulture("en");
-    options.SupportedCultures = supportedCultures;
-    options.SupportedUICultures = supportedCultures;
-    options.RequestCultureProviders = new[] { new CookieRequestCultureProvider() };
-});
 
 var app = builder.Build();
 
@@ -47,7 +36,6 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-app.MapRazorPages();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
