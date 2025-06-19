@@ -163,7 +163,7 @@
         UserSession.CurrentUser = null;
 
         // 4. Перейти на страницу регистрации
-        Navigation.NavigateTo("/registration", true);
+        Navigation.NavigateTo("/registration", forceLoad: true);
     }
 
     private string selectedLanguage;
@@ -185,9 +185,7 @@
     {
         // Place your callback logic here.
         // For example, navigating to the SetCulture page:
-        Navigation.NavigateTo(
-            $"/SetCulture?culture={selectedLanguage}&returnUrl={Navigation.ToBaseRelativePath(Navigation.Uri)}",
-            forceLoad: true);
+        Navigation.NavigateTo($"/SetCulture?culture={selectedLanguage}&returnUrl={Navigation.ToBaseRelativePath(Navigation.Uri)}", forceLoad: true);
     }
 
     private int musicVolume = 50;

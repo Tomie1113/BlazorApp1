@@ -214,36 +214,31 @@
 
 @if (!isRegistering)
 {
-
-    <div class="login-container">
-        <h2>@Localizer["GameTiltle"]</h2>
-        <input @bind="login" placeholder="@Localizer["LoginPlaseholder"]" />
-        <input @bind="password" type="password" placeholder="@Localizer["PasswordPlaseholder"]" />
-        <div class="button-container">
-            <button @onclick="SubmitLogin">@Localizer["SignInButton"]</button>
-            <button @onclick="StartRegistration">@Localizer["RegisterButton"]</button>
+    <div class="login-background">
+        <img src="images/background/menu.png" alt="Background" class="background-image" />
+        <div class="login-container">
+            <h2>@Localizer["GameTiltle"]</h2>
+            <input @bind="login" placeholder="@Localizer["LoginPlaseholder"]" />
+            <input @bind="password" type="password" placeholder="@Localizer["PasswordPlaseholder"]" />
+            <div class="button-container">
+                <button @onclick="SubmitLogin">@Localizer["SignInButton"]</button>
+                <button @onclick="StartRegistration">@Localizer["RegisterButton"]</button>
+            </div>
         </div>
     </div>
-    <div class="background-image-container">
-        <img src="images/background/menu.png" class="background-image" />
-    </div>
+
 }
 else
 {
     <pre style="color:red">@debug</pre>
-
     <div class="modal-overlay"></div>
-
     <div class="modal show">
         <button class="close-btn" @onclick="() => isRegistering = false">×</button>
-
         <h3 class="modal-title">Регистрация</h3>
-
         <div class="modal-form">
             <input @bind="regUsername" placeholder="Имя пользователя" />
             <input @bind="regEmail" placeholder="Email" />
             <input @bind="regPassword" type="password" placeholder="Пароль" />
-
             <div class="button-container">
                 <button class="primary-btn" @onclick="SubmitRegistration">Зарегистрироваться</button>
                 <button class="back-btn" @onclick="() => isRegistering = false">Назад</button>
