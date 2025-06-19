@@ -24,6 +24,7 @@
     private bool ShowCoinNotification = false;
     private string CoinMessage = "";
     private bool IsPositiveCoin = true;
+    private string shopTitleMessage = "";
     private string shopErrorMessage = "";
     private string zeroFlowersMessage = "";
     private async Task ShowCoinChange(int delta, string sound = "defaultSound")
@@ -74,7 +75,13 @@
     private async void BuyFlower(Flower flower)
     {
         if (UserSession.CurrentUser.Coins < flower.PriceBuy)
+        {
+            showShop = false;
+            showShopError = true;
+            shopTitleMessage = "Недостаточно средств";
+            shopErrorMessage = "У Вас недостаточно монет. Продайте свои цветы или отвечайте на вопросы правильно и получайте вознаграждение!";
             return;
+        }
 
         var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
         using var conn = new MySqlConnection(connStr);
@@ -87,6 +94,7 @@
         {
             showShop = false;
             showShopError = true;
+            shopTitleMessage = "Отсутствие мест";
             shopErrorMessage = "У Вас нет свободных мест для цветов.\nВырастите и продайте цветы, чтобы посадить новые!";
             return;
         }
@@ -691,7 +699,7 @@
         <div class="modal-overlay"></div>
         <div class="modal1 error-modal show">
             <button class="close-btn" @onclick="() => showShopError = false">×</button>
-            <h3 class="modal-title">Отсутствие места</h3>
+            <h3 class="modal-title">@shopTitleMessage</h3>
             <p>@shopErrorMessage</p>
         </div>
     }
