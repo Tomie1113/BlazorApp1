@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="BuyPriceTag" xml:space="preserve">
+    <value>Купить за: </value>
+  </data>
   <data name="CloseButtonText" xml:space="preserve">
     <value>Закрыть</value>
   </data>
@@ -128,6 +131,9 @@
   </data>
   <data name="FlowerHeadder" xml:space="preserve">
     <value>Мои Цветы</value>
+  </data>
+  <data name="FlowerState" xml:space="preserve">
+    <value>Состояние: </value>
   </data>
   <data name="LanguageLabel" xml:space="preserve">
     <value>Язык</value>
@@ -141,8 +147,14 @@
   <data name="QestionHeader" xml:space="preserve">
     <value>Вопрос</value>
   </data>
+  <data name="RemovePlantTag" xml:space="preserve">
+    <value>Выкинуть</value>
+  </data>
   <data name="RussianOption" xml:space="preserve">
     <value>Русский</value>
+  </data>
+  <data name="SellPriceTag" xml:space="preserve">
+    <value>Продать за</value>
   </data>
   <data name="SettingsHeader" xml:space="preserve">
     <value>Настройки</value>

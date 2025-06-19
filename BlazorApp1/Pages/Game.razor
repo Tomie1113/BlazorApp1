@@ -616,7 +616,7 @@ private void OpenQuestionModal(int slot)
                             <div class="flower-name">@flower.DisplayName</div>
                             <div class="flower-action">
                                 <button class="action-button" @onclick="() => BuyFlower(flower)">
-                                    Купить за @flower.PriceBuy
+                                    @Localizer["BuyPriceTag"]@flower.PriceBuy
                                 </button>
                             </div>
                         </div>
@@ -625,7 +625,7 @@ private void OpenQuestionModal(int slot)
             </div>
 
             <button class="close-full-button" @onclick="CloseModals">
-                Закрыть
+                @Localizer["CloseButtonText"]
             </button>
         </div>
     }
@@ -654,19 +654,19 @@ private void OpenQuestionModal(int slot)
                         <div class="flower-card">
                             <img src="@flower.GetStateImage()" class="flower-img" />
                             <div class="flower-name">@flower.DisplayName</div>
-                            <div class="flower-state">Состояние: @state</div>
+                            <div class="flower-state">@Localizer["FlowerState"]@state</div>
                             <div class="flower-action">
                                 @if (flower.IsDead)
                                 {
                                     <button class="action-button throw" @onclick="() => ThrowOutFlower(flower)">
                                         🗑
-                                        <span>Выкинуть</span>
+                                        <span>@Localizer["RemovePlantTag"]</span>
                                     </button>
                                 }
                                 else
                                 {
                                     <button class="action-button" @onclick="() => SellFlower(flower, sellPrice)">
-                                        Продать за @sellPrice
+                                        @Localizer["SellPriceTag"] @sellPrice
                                     </button>
 
                                 }
@@ -676,7 +676,7 @@ private void OpenQuestionModal(int slot)
                     }
                 </div>
                 <button class="close-full-button" @onclick="CloseModals">
-                    Закрыть
+                    @Localizer["CloseButtonText"]
                 </button>
             </div>
 

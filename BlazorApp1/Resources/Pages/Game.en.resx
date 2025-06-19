@@ -117,37 +117,49 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="BuyPriceTag" xml:space="preserve">
+    <value>Buy For: </value>
+  </data>
   <data name="CloseButtonText" xml:space="preserve">
-    <value>CloseButtonText</value>
+    <value>Close</value>
   </data>
   <data name="EffectsVolumeLabel" xml:space="preserve">
-    <value>EffectsVolumeLabel</value>
+    <value>Effects</value>
   </data>
   <data name="EnglishOption" xml:space="preserve">
     <value>English</value>
   </data>
   <data name="FlowerHeadder" xml:space="preserve">
-    <value>FlowerHeadder</value>
+    <value>My Flowers</value>
+  </data>
+  <data name="FlowerState" xml:space="preserve">
+    <value>State: </value>
   </data>
   <data name="LanguageLabel" xml:space="preserve">
     <value>Language</value>
   </data>
   <data name="LogoutButtonText" xml:space="preserve">
-    <value>LogoutButtonText</value>
+    <value>Logout</value>
   </data>
   <data name="MusicVolumeLabel" xml:space="preserve">
-    <value>MusicVolumeLabel</value>
+    <value>Music</value>
   </data>
   <data name="QestionHeader" xml:space="preserve">
-    <value>QestionHeader</value>
+    <value>Qestion</value>
+  </data>
+  <data name="RemovePlantTag" xml:space="preserve">
+    <value>Remove</value>
   </data>
   <data name="RussianOption" xml:space="preserve">
     <value>Русский</value>
   </data>
+  <data name="SellPriceTag" xml:space="preserve">
+    <value>Sell for</value>
+  </data>
   <data name="SettingsHeader" xml:space="preserve">
-    <value>SettingsHeader</value>
+    <value>Settings</value>
   </data>
   <data name="StoreHeader" xml:space="preserve">
-    <value>StoreHeader</value>
+    <value>Store</value>
   </data>
 </root>
