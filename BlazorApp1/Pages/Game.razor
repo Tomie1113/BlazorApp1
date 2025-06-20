@@ -686,11 +686,11 @@
                 return;
 
 
-            var flower = UserSession.CurrentUser.Flowers.First(f => f.Slot == currentQuestionSlot.Value);
+            var flower = CurrentUserSvc.User.Flowers.First(f => f.Slot == currentQuestionSlot.Value);
 
             if (selected.IsCorrect)
             {
-                UserSession.CurrentUser.Coins += 5;
+                CurrentUserSvc.User.Coins += 5;
                 flower.Hp = Math.Min(flower.Hp + 1, flower.MaxHp);
                 await UpdateFlowerAndCoins(flower); // пишем в БД сразу после изменения
                 await ShowCoinChange(5, "successSound");
