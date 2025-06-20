@@ -82,7 +82,7 @@
 
     .flower-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        grid-template-columns: repeat(auto-fill);
         gap: 1px;
         justify-items: center;
     }
@@ -450,15 +450,15 @@ input[type="range"] {
     }
 
 .game-field {
-    position: absolute !important; /* чтобы вырваться из центрирования */
-    top: 6vh !important; /* отступ сверху адаптивно */
-    left: 2vw !important; /* отступ слева адаптивно */
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 1vh !important;
-    width: 80% !important;
-    height: 80% !important;
-    transform-origin: top left !important; /* ← Масштабируем от верхнего левого угла */
+    position: absolute ; /* чтобы вырваться из центрирования */
+    top: 6vh ; /* отступ сверху адаптивно */
+    left: 2vw ; /* отступ слева адаптивно */
+    display: flex ;
+    flex-direction: column ;
+    gap: 1vh ;
+    width: 80% ;
+    height: 80% ;
+    transform-origin: top left ; /* ← Масштабируем от верхнего левого угла */
     z-index: 10;
 }
 
