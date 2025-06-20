@@ -22,31 +22,7 @@
         await LoadShopFlowers(); // теперь await
         StateHasChanged();
     }
-    private bool _initialized = false;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !_initialized)
-        {
-            _initialized = true;
-
-            await JSRuntime.InvokeVoidAsync("eval",
-                @"document.body.addEventListener(
-                'click',
-                () => window.initAudio(),
-                { once: true }
-              );");
-            var req = httpContextAccessor.HttpContext?.Request;
-            if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
-                int.TryParse(mvStr, out var mv))
-                MusicVolume = mv;
-
-            if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
-                int.TryParse(evStr, out var ev))
-                EffectsVolume = ev;
-
-        }
-    }
     private bool ShowCoinNotification = false;
     private string CoinMessage = "";
     private bool IsPositiveCoin = true;
@@ -460,6 +436,21 @@
         questionTimer.Elapsed += async (s, e) => await HandleTimerTick();
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
+
+        await JSRuntime.InvokeVoidAsync("eval",
+      @"document.body.addEventListener(
+                'click',
+                () => window.initAudio(),
+                { once: true }
+              );");
+        var req = httpContextAccessor.HttpContext?.Request;
+        if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
+            int.TryParse(mvStr, out var mv))
+            MusicVolume = mv;
+
+        if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
+            int.TryParse(evStr, out var ev))
+            EffectsVolume = ev;
     }
 
 
