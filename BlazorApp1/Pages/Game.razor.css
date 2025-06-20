@@ -1,25 +1,95 @@
 ﻿.game-wrapper {
     display: flex;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
     height: 100vh;
     width: 100vw;
+    position: relative; /* Для абсолютного позиционирования левой панели */
+    overflow: hidden; /* Чтобы не было скролла, если панель выходит за границы */
 }
 
+
 .game-container {
-    position: relative; /* anchor for all absolutely-positioned kids */
-    aspect-ratio: 5 / 4;
-    min-width: 400px;
-    min-height: 320px;
-    height: calc(min(90vmin, 800px) * 0.8);
+    position: relative;
+    width: 100vmin;
     height: 80vmin;
     background: url('/images/background/background.png') center/cover no-repeat;
+    border-radius: 8px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    z-index: 1;
 }
+
+
+.left-panel {
+    position: absolute;
+    width: calc(100vmin / 3);
+    height: 80vmin;
+    background: url('/images/background/background.png') center/cover no-repeat;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    /* Позиционируем слева от центрированного game-container */
+    left: calc(50% - 100vmin / 1.5 - 16px - 100vmin / 3 / 2);
+    /* Разбираем формулу:
+      50% - середина экрана
+      - 100vmin / 2 - смещаем на половину ширины game-container
+      - 16px - отступ между элементами
+      - 100vmin / 3 / 2 - половина ширины самой left-panel
+   */
+    opacity: 0; /* Начальная прозрачность */
+    transform: translateX(+80%); /* Скрыта на 80% */
+    transition: transform 0.4s ease-out, opacity 0.3s ease-out;
+}
+
+
+    .left-panel.hidden {
+        opacity: 0;
+        transform: translateX(+100%);
+    }
+
+
+    .left-panel.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+
+.top-left-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 100; /* Чтобы кнопка была поверх других элементов */
+    cursor: pointer;
+    /* Дополнительные стили по желанию */
+    width: 60px;
+    height: 60px;
+    background: #fffaf0;
+    border: 2px solid #8B4513;
+    font-family: 'Grenze Gotisch', cursive;
+    color: #5a2e1d;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+    .top-left-button:hover {
+        transform: scale(1.05);
+    }
+
+
+    .top-left-button img {
+        width: 24px;
+        height: 24px;
+    }
+
 
 .shelf-container {
     display: flex;
@@ -88,6 +158,16 @@
     transform: translateX(35%) rotate(90deg); /* <-- поворот влево */
     transition: transform 0.3s ease, opacity 0.3s ease;
 }
+
+.slot-icon-lamp {
+    margin: 0 !important; /* Убедись, что нет внешних отступов */
+    padding: 0 !important;
+    width: 100%; !important; /* высота относительно экрана */
+    height: 100%; !important;
+    transform: scale(1.1);
+    /*transition: transform 0.3s ease, opacity 0.3s ease;*/
+}
+
 .slot-button {
     cursor: pointer;
     width: fit-content;
@@ -517,18 +597,32 @@ input[type="range"] {
 
 .game-container .question-bubble {
     position: absolute;
-    top: 2vmin;
+    top: 0;
     left: 50%;
-    transform: translateX(-50%) scale(1);
-    padding: 1vmin 2vmin;
-    font-size: 3vmin;
+    transform: translateX(-50%);
     background: #fdf5c2;
     border: 2px solid #8B4513;
     border-radius: 20px;
+    padding: 6px 10px;
+    font-weight: bold;
+    cursor: pointer;
     z-index: 50;
+    box-shadow: 0 0 6px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
     /* nothing else in your CSS will catch it */
-
 }
+
+
+    .question-bubble:hover {
+        transform: translateX(-50%) scale(1.05);
+    }
+
+
+    .question-bubble img {
+        width: 24px;
+        height: 24px;
+    }
+
 
     /* Эффект при наведении: увеличиваем полностью весь пузырёк */
     .question-bubble:hover {
