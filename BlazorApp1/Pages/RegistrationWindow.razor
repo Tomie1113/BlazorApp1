@@ -71,10 +71,18 @@
                 insertCmd.Parameters.AddWithValue("@exp", expires);
                 await insertCmd.ExecuteNonQueryAsync();
 
+
                 await JS.InvokeVoidAsync("CookieHelper.set", "authToken", token, 1);
+
+                await JS.InvokeVoidAsync("localStorage.setItem", "auth_token", token);
+
+                UserSession.CurrentUser = await UserRepository.LoadUserById(userId, conn);
+                UserSession.CurrentUser.IsNewUser = false;
+
 
                 CurrentUserSvc.User = await UserRepository.LoadUserById(userId, conn);
                 CurrentUserSvc.User.IsNewUser = false;
+
 
                 Navigation.NavigateTo("/main");
             }
@@ -203,7 +211,12 @@
                     Coins = 0,
                     Flowers = flowers
                 };
+
+            UserSession.CurrentUser.IsNewUser = true;
+
+
             CurrentUserSvc.User.IsNewUser = true;
+
 
             // ❗ Удаляем старые токены на всякий случай (если регаешься повторно под тем же user_id)
             var deleteCmd = new MySqlCommand("DELETE FROM authtokens WHERE user_id = @uid", conn);
