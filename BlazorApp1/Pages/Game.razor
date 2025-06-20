@@ -677,35 +677,42 @@
 
     private async Task SubmitAnswer()
     {
-        if (currentQuestionSlot is null || !activeQuestions.TryGetValue(currentQuestionSlot.Value, out var question))
-            return;
+        try{
+            if (currentQuestionSlot is null || !activeQuestions.TryGetValue(currentQuestionSlot.Value, out var question))
+                return;
 
-        var selected = question?.Answers.FirstOrDefault(a => a.Id == selectedAnswerId);
-        if (selected == null)
-            return;
+            var selected = question?.Answers.FirstOrDefault(a => a.Id == selectedAnswerId);
+            if (selected == null)
+                return;
 
-        var flower = CurrentUserSvc.User.Flowers.First(f => f.Slot == currentQuestionSlot.Value);
 
-        if (selected.IsCorrect)
-        {
-            CurrentUserSvc.User.Coins += 5;
-            flower.Hp = Math.Min(flower.Hp + 1, flower.MaxHp);
-            await UpdateFlowerAndCoins(flower); // пишем в БД сразу после изменения
-            await ShowCoinChange(5, "successSound");
+            var flower = UserSession.CurrentUser.Flowers.First(f => f.Slot == currentQuestionSlot.Value);
+
+            if (selected.IsCorrect)
+            {
+                UserSession.CurrentUser.Coins += 5;
+                flower.Hp = Math.Min(flower.Hp + 1, flower.MaxHp);
+                await UpdateFlowerAndCoins(flower); // пишем в БД сразу после изменения
+                await ShowCoinChange(5, "successSound");
+                Debug.WriteLine("Ответ верный");
+            }
+            else
+            {
+                flower.Hp = Math.Max(0, flower.Hp - 1);
+                await UpdateFlowerAndCoins(flower);
+                await ShowCoinChange(0, "loseSound");
+                Debug.WriteLine("Ответ верный");
+            }
+
+
+            activeQuestions.Remove(currentQuestionSlot.Value);
+            CloseQuestionModal();
+            StateHasChanged();
         }
-        else
+        catch (Exception ex)
         {
-            flower.Hp = Math.Max(0, flower.Hp - 1);
-            await UpdateFlowerAndCoins(flower);
-            await ShowCoinChange(0, "loseSound");
+            Debug.WriteLine("Ошибка" + ex.Message); 
         }
-
-        // 🛠️ Обновление в БД
-        await UpdateFlowerAndCoins(flower);
-
-        activeQuestions.Remove(currentQuestionSlot.Value);
-        CloseQuestionModal();
-        StateHasChanged();
     }
 
     public void Dispose()
