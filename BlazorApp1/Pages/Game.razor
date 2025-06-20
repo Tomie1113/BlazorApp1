@@ -9,6 +9,7 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<Game> Localizer
 @inject IJSRuntime JSRuntime
+@inject ICurrentUserService CurrentUserSvc
 @code {
     private List<Flower> shopFlowers = new();
     async void OpenShop()
@@ -162,7 +163,7 @@
 
     private async void BuyFlower(Flower flower)
     {
-        if (UserSession.CurrentUser.Coins < flower.PriceBuy)
+        if (CurrentUserSvc.User.Coins < flower.PriceBuy)
         {
             showShop = false;
             showShopError = true;
@@ -175,9 +176,9 @@
         using var conn = new MySqlConnection(connStr);
         await conn.OpenAsync();
         // Найдём первый свободный слот (0-5)
-        var usedSlots = UserSession.CurrentUser.Flowers.Select(f => f.Slot).ToHashSet();
+        var usedSlots = CurrentUserSvc.User.Flowers.Select(f => f.Slot).ToHashSet();
         int freeSlot = Enumerable.Range(0, 6).FirstOrDefault(i => !usedSlots.Contains(i));
-        if (UserSession.CurrentUser.Flowers.Count==6)
+        if (CurrentUserSvc.User.Flowers.Count == 6)
         {
             showShop = false;
             showShopError = true;
@@ -188,23 +189,23 @@
 
         // Добавить цветок в БД
         var insertCmd = new MySqlCommand("INSERT INTO flowers (user_id, type_id, hp, pot_slot) VALUES (@uid, @type, @hp, @slot)", conn);
-        insertCmd.Parameters.AddWithValue("@uid", UserSession.CurrentUser.Id);
+        insertCmd.Parameters.AddWithValue("@uid", CurrentUserSvc.User.Id);
         insertCmd.Parameters.AddWithValue("@type", flower.TypeId);
         insertCmd.Parameters.AddWithValue("@hp", 9);
         insertCmd.Parameters.AddWithValue("@slot", freeSlot);
         await insertCmd.ExecuteNonQueryAsync();
 
         // Обновить монеты в БД
-        UserSession.CurrentUser.Coins -= flower.PriceBuy;
+        CurrentUserSvc.User.Coins -= flower.PriceBuy;
         await ShowCoinChange(-flower.PriceBuy, "defaultSound");
 
         var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
-        updateCoins.Parameters.AddWithValue("@coins", UserSession.CurrentUser.Coins);
-        updateCoins.Parameters.AddWithValue("@id", UserSession.CurrentUser.Id);
+        updateCoins.Parameters.AddWithValue("@coins", CurrentUserSvc.User.Coins);
+        updateCoins.Parameters.AddWithValue("@id", CurrentUserSvc.User.Id);
         await updateCoins.ExecuteNonQueryAsync();
 
         // Добавить в список в C#
-        UserSession.CurrentUser.Flowers.Add(new Flower
+        CurrentUserSvc.User.Flowers.Add(new Flower
             {
                 TypeId = flower.TypeId,
                 DisplayName = flower.DisplayName,
@@ -237,7 +238,7 @@
     private string GetFlowerImage(int slot)
     {
 
-        var flower = UserSession.CurrentUser.Flowers.FirstOrDefault(f => f.Slot == slot);
+        var flower = CurrentUserSvc.User.Flowers.FirstOrDefault(f => f.Slot == slot);
         return flower != null
             ? flower.GetStateImage()
             : "/images/flowers/empty.png"; // Заглушка, если цветка нет
@@ -298,7 +299,7 @@
         showMyFlowers = false;
 
         // 3. Сбросить пользователя
-        UserSession.CurrentUser = null;
+        CurrentUserSvc.User = null;
 
         // 4. Перейти на страницу регистрации
         Navigation.NavigateTo("/registration", forceLoad: true);
@@ -341,17 +342,17 @@
         await deleteCmd.ExecuteNonQueryAsync();
 
         // 2. Обновить монеты пользователя
-        UserSession.CurrentUser.Coins += price;
+        CurrentUserSvc.User.Coins += price;
         await ShowCoinChange(+price, "defaultSound");
 
 
         var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
-        updateCoins.Parameters.AddWithValue("@coins", UserSession.CurrentUser.Coins);
-        updateCoins.Parameters.AddWithValue("@id", UserSession.CurrentUser.Id);
+        updateCoins.Parameters.AddWithValue("@coins", CurrentUserSvc.User.Coins);
+        updateCoins.Parameters.AddWithValue("@id", CurrentUserSvc.User.Id);
         await updateCoins.ExecuteNonQueryAsync();
 
         // 3. Удалить цветок из списка цветов
-        UserSession.CurrentUser.Flowers.Remove(flower);
+        CurrentUserSvc.User.Flowers.Remove(flower);
 
         // 4. Закрыть вопрос, если он связан с этим цветком
         if (currentQuestionSlot.HasValue && currentQuestionSlot.Value == flower.Slot)
@@ -371,7 +372,7 @@
     private async void ThrowOutFlower(Flower flower)
     {
         // 1. Удалить цветок из списка цветов
-        UserSession.CurrentUser.Flowers.Remove(flower);
+        CurrentUserSvc.User.Flowers.Remove(flower);
 
         // 2. Закрыть вопрос, если он связан с этим цветком
         if (currentQuestionSlot.HasValue && currentQuestionSlot.Value == flower.Slot)
@@ -434,7 +435,7 @@
     // }
     protected override async void OnInitialized()
     {
-        Debug.WriteLine("Новый пользователь" + UserSession.CurrentUser.IsNewUser);
+        Debug.WriteLine("Новый пользователь" + CurrentUserSvc.User.IsNewUser);
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
         await LoadValidTypeIds();
@@ -511,12 +512,12 @@
     {
         try
         {
-            if (UserSession.CurrentUser == null)
+            if (CurrentUserSvc.User == null)
             {
                 Debug.WriteLine("❌ AskNextQuestion cancelled: user is null");
                 return;
             }
-            var candidates = UserSession.CurrentUser.Flowers
+            var candidates = CurrentUserSvc.User.Flowers
                 .Where(f => !f.IsDead && !activeQuestions.ContainsKey(f.Slot) && validTypeIds.Contains(f.TypeId))
                 .Select(f => f.Slot)
                 .ToList();
@@ -546,12 +547,12 @@
     {
         try
         {
-            if (UserSession.CurrentUser == null)
+            if (CurrentUserSvc.User == null)
             {
                 Debug.WriteLine("❌ Current user is null");
                 return;
             }
-            var flower = UserSession.CurrentUser.Flowers.FirstOrDefault(f => f.Slot == slot);
+            var flower = CurrentUserSvc.User.Flowers.FirstOrDefault(f => f.Slot == slot);
             if (flower == null || flower.IsDead || activeQuestions.ContainsKey(slot))
             {
                 Debug.WriteLine($"⛔ Skipping slot {slot}: null or dead or already active");
@@ -618,14 +619,14 @@
     private async void OpenQuestionModal(int slot)
     {
         await ShowCoinChange(-1, "defaultSound");
-        if (UserSession.CurrentUser == null)
+        if (CurrentUserSvc.User == null)
         {
             Debug.WriteLine($"⛔ Cannot open modal: user is null");
             return;
         }
         Debug.WriteLine($"📥 Opening question modal for slot {slot}");
 
-        var flower = UserSession.CurrentUser.Flowers.FirstOrDefault(f => f.Slot == slot);
+        var flower = CurrentUserSvc.User.Flowers.FirstOrDefault(f => f.Slot == slot);
         if (flower == null || flower.IsDead)
         {
             Debug.WriteLine($"⛔ Flower is dead or missing, cannot open modal for slot {slot}");
@@ -664,8 +665,8 @@
             await updateHp.ExecuteNonQueryAsync();
 
             var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
-            updateCoins.Parameters.AddWithValue("@coins", UserSession.CurrentUser.Coins);
-            updateCoins.Parameters.AddWithValue("@id", UserSession.CurrentUser.Id);
+            updateCoins.Parameters.AddWithValue("@coins", CurrentUserSvc.User.Coins);
+            updateCoins.Parameters.AddWithValue("@id", CurrentUserSvc.User.Id);
             await updateCoins.ExecuteNonQueryAsync();
         }
         catch (Exception ex)
@@ -683,6 +684,7 @@
             var selected = question?.Answers.FirstOrDefault(a => a.Id == selectedAnswerId);
             if (selected == null)
                 return;
+
 
             var flower = UserSession.CurrentUser.Flowers.First(f => f.Slot == currentQuestionSlot.Value);
 
@@ -744,7 +746,7 @@
 
 
 
-@if (UserSession.CurrentUser != null)
+@if (CurrentUserSvc.User != null)
 {
     <div class="game-wrapper">
         <div class="left-panel @panelState"></div>
@@ -802,7 +804,7 @@
             </div>
             <div class="money-container">
                 <img class="money-icon" src="images/icons/money.png" />
-                <div class="money-amount">@UserSession.CurrentUser.Coins</div>
+                <div class="money-amount">@CurrentUserSvc.User.Coins</div>
             </div>
 
             <div class="slots-panel">
@@ -903,11 +905,11 @@
             <div class="modal1">
                 <h3>@Localizer["FlowerHeadder"]</h3>
                 <div class="shop-scroll-wrapper">
-                    @if (UserSession.CurrentUser.Flowers.Count > 0)
+                    @if (CurrentUserSvc.User.Flowers.Count > 0)
                     {
                         <div class="flower-grid">
 
-                            @foreach (var flower in UserSession.CurrentUser.Flowers.OrderBy(f => f.Slot))
+                            @foreach (var flower in CurrentUserSvc.User.Flowers.OrderBy(f => f.Slot))
                             {
                                 var state = flower.GetStateImage().Split('/').Last().Replace(".png", "");
                                 int sellPrice = flower.PriceSell;
