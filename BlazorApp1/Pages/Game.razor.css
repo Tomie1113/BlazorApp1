@@ -2,6 +2,7 @@
     .game-wrapper {
         display: flex !important;
         position: fixed !important;
+        justify-content: center !important;
         left: 0 !important;
         right: 0 !important;
         top: 0 !important;
@@ -15,7 +16,7 @@
         display: flex !important;
         position: fixed !important;
         flex-direction: column !important;
-        justify-content: top !important;
+        justify-content: center !important;
         align-items: center !important;
         width: 100vw !important;
         height: 100vh !important;
@@ -88,6 +89,7 @@
 }
 
 .game-wrapper {
+    user-select: none;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -100,6 +102,7 @@
 
 
 .game-container {
+    user-select: none;
     position: relative;
     width: 100vmin;
     height: 80vmin;
@@ -727,6 +730,7 @@ input[type="range"] {
 }
 
 .question-modal {
+    user-select: none;
     background: #fffaf0;
     border: 2px solid #8B4513;
     border-radius: 16px;
@@ -806,6 +810,7 @@ input[type="range"] {
         }
 
 .coin-notification {
+    user-select: none;
     position: fixed;
     top: 25%;
     left: 50%;
