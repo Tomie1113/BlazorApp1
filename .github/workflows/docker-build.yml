@@ -44,5 +44,5 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/$flowerquestionapp:latest
-            ghcr.io/$flowerquestionapp:${{ github.sha }}
+            ghcr.io/$tomie1113/flowerquestionapp:latest
+            ghcr.io/$tomie1113/flowerquestionapp:${{ github.sha }}
