@@ -692,16 +692,16 @@
                 flower.Hp = Math.Min(flower.Hp + 1, flower.MaxHp);
                 await UpdateFlowerAndCoins(flower); // пишем в БД сразу после изменения
                 await ShowCoinChange(5, "successSound");
+                Debug.WriteLine("Ответ верный");
             }
             else
             {
                 flower.Hp = Math.Max(0, flower.Hp - 1);
                 await UpdateFlowerAndCoins(flower);
                 await ShowCoinChange(0, "loseSound");
+                Debug.WriteLine("Ответ верный");
             }
 
-            // 🛠️ Обновление в БД
-            await UpdateFlowerAndCoins(flower);
 
             activeQuestions.Remove(currentQuestionSlot.Value);
             CloseQuestionModal();
