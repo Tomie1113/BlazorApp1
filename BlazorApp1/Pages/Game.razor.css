@@ -678,7 +678,6 @@ input[type="range"] {
 
 .shop-scroll-wrapper {
     max-height: 50vh; /* или 50vh, если хочешь адаптивно */
-    max-width: 40vh; /* или 50vh, если хочешь адаптивно */
     overflow-y: auto;
     margin-bottom: 16px;
     padding-right: 4px; /* чтобы не обрезало тени у карточек */
@@ -708,6 +707,8 @@ input[type="range"] {
     z-index: 50;
     box-shadow: 0 0 6px rgba(0,0,0,0.2);
     transition: transform 0.2s ease;
+
+    font-family: 'Grenze Gotisch', cursive;
     /* nothing else in your CSS will catch it */
 }
 
