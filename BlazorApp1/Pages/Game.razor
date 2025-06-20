@@ -160,53 +160,58 @@
                 });
         }
     }
+    private readonly SemaphoreSlim buyLock = new SemaphoreSlim(1, 1);
 
     private async void BuyFlower(Flower flower)
     {
-        if (CurrentUserSvc.User.Coins < flower.PriceBuy)
-        {
-            showShop = false;
-            showShopError = true;
-            shopTitleMessage = "Недостаточно средств";
-            shopErrorMessage = "У Вас недостаточно монет. Продайте свои цветы или отвечайте на вопросы правильно и получайте вознаграждение!";
-            return;
-        }
-
-        var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
-        using var conn = new MySqlConnection(connStr);
-        await conn.OpenAsync();
-        // Найдём первый свободный слот (0-5)
-        var usedSlots = CurrentUserSvc.User.Flowers.Select(f => f.Slot).ToHashSet();
-        int freeSlot = Enumerable.Range(0, 6).FirstOrDefault(i => !usedSlots.Contains(i));
-        if (CurrentUserSvc.User.Flowers.Count == 6)
-        {
-            showShop = false;
-            showShopError = true;
-            shopTitleMessage = "Отсутствие мест";
-            shopErrorMessage = "У Вас нет свободных мест для цветов.\nВырастите и продайте цветы, чтобы посадить новые!";
-            return;
-        }
-
-        // Добавить цветок в БД
-        var insertCmd = new MySqlCommand("INSERT INTO flowers (user_id, type_id, hp, pot_slot) VALUES (@uid, @type, @hp, @slot)", conn);
-        insertCmd.Parameters.AddWithValue("@uid", CurrentUserSvc.User.Id);
-        insertCmd.Parameters.AddWithValue("@type", flower.TypeId);
-        insertCmd.Parameters.AddWithValue("@hp", 9);
-        insertCmd.Parameters.AddWithValue("@slot", freeSlot);
-        await insertCmd.ExecuteNonQueryAsync();
-
-        // Обновить монеты в БД
-        CurrentUserSvc.User.Coins -= flower.PriceBuy;
-        await ShowCoinChange(-flower.PriceBuy, "defaultSound");
-
-        var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
-        updateCoins.Parameters.AddWithValue("@coins", CurrentUserSvc.User.Coins);
-        updateCoins.Parameters.AddWithValue("@id", CurrentUserSvc.User.Id);
-        await updateCoins.ExecuteNonQueryAsync();
-
-        // Добавить в список в C#
-        CurrentUserSvc.User.Flowers.Add(new Flower
+        if (!await buyLock.WaitAsync(0))
+            return; // если семафор занят — не пускаем
+        try{
+            if (CurrentUserSvc.User.Coins < flower.PriceBuy)
             {
+                showShop = false;
+                showShopError = true;
+                shopTitleMessage = "Недостаточно средств";
+                shopErrorMessage = "У Вас недостаточно монет. Продайте свои цветы или отвечайте на вопросы правильно и получайте вознаграждение!";
+                return;
+            }
+            if (CurrentUserSvc.User.Flowers.Count == 6)
+            {
+                showShop = false;
+                showShopError = true;
+                shopTitleMessage = "Отсутствие мест";
+                shopErrorMessage = "У Вас нет свободных мест для цветов.\nВырастите и продайте цветы, чтобы посадить новые!";
+                return;
+            }
+            var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
+            using var conn = new MySqlConnection(connStr);
+            await conn.OpenAsync();
+            // Найдём первый свободный слот (0-5)
+            var usedSlots = CurrentUserSvc.User.Flowers.Select(f => f.Slot).ToHashSet();
+            int freeSlot = Enumerable.Range(0, 6).FirstOrDefault(i => !usedSlots.Contains(i));
+
+
+            // Добавить цветок в БД
+            var insertCmd = new MySqlCommand("INSERT INTO flowers (user_id, type_id, hp, pot_slot) VALUES (@uid, @type, @hp, @slot)", conn);
+            insertCmd.Parameters.AddWithValue("@uid", CurrentUserSvc.User.Id);
+            insertCmd.Parameters.AddWithValue("@type", flower.TypeId);
+            insertCmd.Parameters.AddWithValue("@hp", 9);
+            insertCmd.Parameters.AddWithValue("@slot", freeSlot);
+            await insertCmd.ExecuteNonQueryAsync();
+            int newId = Convert.ToInt32(insertCmd.LastInsertedId);
+            // Обновить монеты в БД
+            CurrentUserSvc.User.Coins -= flower.PriceBuy;
+            await ShowCoinChange(-flower.PriceBuy, "defaultSound");
+
+            var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
+            updateCoins.Parameters.AddWithValue("@coins", CurrentUserSvc.User.Coins);
+            updateCoins.Parameters.AddWithValue("@id", CurrentUserSvc.User.Id);
+            await updateCoins.ExecuteNonQueryAsync();
+
+            // Добавить в список в C#
+            CurrentUserSvc.User.Flowers.Add(new Flower
+            {
+                 Id = newId,
                 TypeId = flower.TypeId,
                 DisplayName = flower.DisplayName,
                 CodeName = flower.CodeName,
@@ -217,7 +222,12 @@
                 Slot = freeSlot
             });
 
-        StateHasChanged();
+            StateHasChanged();
+        }
+        finally
+        {
+            buyLock.Release();
+        }
     }
 
     private void InstructionsButton()
@@ -330,43 +340,100 @@
     private int musicVolume = 50;
     private int effectsVolume = 50;
 
-    private async void SellFlower(Flower flower, int price)
+    private readonly SemaphoreSlim sellLock = new SemaphoreSlim(1, 1);
+    // private async void SellFlower(Flower flower, int price)
+    // {
+    //     if (!await sellLock.WaitAsync(0))
+    //         return; // если семафор занят — не пускаем
+    //     try
+    //     {
+    //         var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
+    //         using var conn = new MySqlConnection(connStr);
+    //         await conn.OpenAsync();
+
+    //         CurrentUserSvc.User.Flowers.Remove(flower);
+    //         // 1. Удалить цветок из таблицы
+    //         var deleteCmd = new MySqlCommand("DELETE FROM flowers WHERE id = @id", conn);
+    //         deleteCmd.Parameters.AddWithValue("@id", flower.Id);
+    //         await deleteCmd.ExecuteNonQueryAsync();
+    //         Debug.WriteLine(flower.Id + "Удален");
+
+
+    //         CurrentUserSvc.User.Coins += price;
+    //         var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
+    //         updateCoins.Parameters.AddWithValue("@coins", CurrentUserSvc.User.Coins);
+    //         updateCoins.Parameters.AddWithValue("@id", CurrentUserSvc.User.Id);
+    //         await updateCoins.ExecuteNonQueryAsync();
+    //         // 2. Обновить монеты пользователя
+
+    //         await ShowCoinChange(+price, "defaultSound");
+    //         // 3. Удалить цветок из списка цветов
+
+
+    //         // 4. Закрыть вопрос, если он связан с этим цветком
+    //         if (currentQuestionSlot.HasValue && currentQuestionSlot.Value == flower.Slot)
+    //         {
+    //             CloseQuestionModal();
+    //         }
+
+    //         // 5. Удалить вопрос из activeQuestions
+    //         if (activeQuestions.ContainsKey(flower.Slot))
+    //         {
+    //             activeQuestions.Remove(flower.Slot);
+    //         }
+
+    //         StateHasChanged();
+    //     }
+    //     finally
+    //     {
+    //         sellLock.Release();
+    //     }
+    // }
+    private async Task SellFlower(int flowerId, int price)
     {
-        var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
-        using var conn = new MySqlConnection(connStr);
-        await conn.OpenAsync();
-
-        // 1. Удалить цветок из таблицы
-        var deleteCmd = new MySqlCommand("DELETE FROM flowers WHERE id = @id LIMIT 1", conn);
-        deleteCmd.Parameters.AddWithValue("@id", flower.Id);
-        await deleteCmd.ExecuteNonQueryAsync();
-
-        // 2. Обновить монеты пользователя
-        CurrentUserSvc.User.Coins += price;
-        await ShowCoinChange(+price, "defaultSound");
-
-
-        var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
-        updateCoins.Parameters.AddWithValue("@coins", CurrentUserSvc.User.Coins);
-        updateCoins.Parameters.AddWithValue("@id", CurrentUserSvc.User.Id);
-        await updateCoins.ExecuteNonQueryAsync();
-
-        // 3. Удалить цветок из списка цветов
-        CurrentUserSvc.User.Flowers.Remove(flower);
-
-        // 4. Закрыть вопрос, если он связан с этим цветком
-        if (currentQuestionSlot.HasValue && currentQuestionSlot.Value == flower.Slot)
+        if (!await sellLock.WaitAsync(0))
+            return;
+        try
         {
-            CloseQuestionModal();
-        }
+            if (flowerId == 0)
+                ;
+            var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
+            using var conn = new MySqlConnection(connStr);
+            await conn.OpenAsync();
 
-        // 5. Удалить вопрос из activeQuestions
-        if (activeQuestions.ContainsKey(flower.Slot))
+            var flower = CurrentUserSvc.User.Flowers.FirstOrDefault(f => f.Id == flowerId);
+            if (flower == null) return;
+
+            CurrentUserSvc.User.Flowers.Remove(flower);
+
+            var deleteCmd = new MySqlCommand("DELETE FROM flowers WHERE id = @id", conn);
+            deleteCmd.Parameters.AddWithValue("@id", flowerId);
+            await deleteCmd.ExecuteNonQueryAsync();
+
+            CurrentUserSvc.User.Coins += price;
+
+            var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
+            updateCoins.Parameters.AddWithValue("@coins", CurrentUserSvc.User.Coins);
+            updateCoins.Parameters.AddWithValue("@id", CurrentUserSvc.User.Id);
+            await updateCoins.ExecuteNonQueryAsync();
+
+            await ShowCoinChange(+price, "defaultSound");
+
+            if (currentQuestionSlot.HasValue && currentQuestionSlot.Value == flower.Slot)
+            {
+                CloseQuestionModal();
+            }
+            if (activeQuestions.ContainsKey(flower.Slot))
+            {
+                activeQuestions.Remove(flower.Slot);
+            }
+
+            StateHasChanged();
+        }
+        finally
         {
-            activeQuestions.Remove(flower.Slot);
+            sellLock.Release();
         }
-
-        StateHasChanged();
     }
 
     private async void ThrowOutFlower(Flower flower)
@@ -435,7 +502,7 @@
     // }
     protected override async void OnInitialized()
     {
-        Debug.WriteLine("Новый пользователь" + CurrentUserSvc.User.IsNewUser);
+        //Debug.WriteLine("Новый пользователь" + CurrentUserSvc.User.IsNewUser);
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
         await LoadValidTypeIds();
@@ -940,8 +1007,8 @@
                                         }
                                         else
                                         {
-                                            <button class="flower-button" @onclick="() => SellFlower(flower, sellPrice)">
-                                                @Localizer["SellPriceTag"] @sellPrice
+                                            <button class="flower-button" @onclick="@(async () => { await SellFlower(flower.Id, sellPrice); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                                               @Localizer["SellPriceTag"] @sellPrice
                                             </button>
                                         }
                                     </div>
