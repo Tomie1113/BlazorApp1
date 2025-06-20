@@ -13,7 +13,7 @@
     public string GetStateImage()
     {
         if (IsDead)
-            return "/images/flowers/fall_dead.png"; // или любой другой файл
+            return $"/images/flowers/{CodeName}/fall.png"; // или любой другой файл
 
         string imageFile = Hp switch
         {

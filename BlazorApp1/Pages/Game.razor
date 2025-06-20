@@ -174,11 +174,10 @@
         var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
         using var conn = new MySqlConnection(connStr);
         await conn.OpenAsync();
-
         // Найдём первый свободный слот (0-5)
         var usedSlots = UserSession.CurrentUser.Flowers.Select(f => f.Slot).ToHashSet();
         int freeSlot = Enumerable.Range(0, 6).FirstOrDefault(i => !usedSlots.Contains(i));
-        if (usedSlots.Count >= 6)
+        if (UserSession.CurrentUser.Flowers.Count==6)
         {
             showShop = false;
             showShopError = true;
@@ -191,7 +190,7 @@
         var insertCmd = new MySqlCommand("INSERT INTO flowers (user_id, type_id, hp, pot_slot) VALUES (@uid, @type, @hp, @slot)", conn);
         insertCmd.Parameters.AddWithValue("@uid", UserSession.CurrentUser.Id);
         insertCmd.Parameters.AddWithValue("@type", flower.TypeId);
-        insertCmd.Parameters.AddWithValue("@hp", 15);
+        insertCmd.Parameters.AddWithValue("@hp", 9);
         insertCmd.Parameters.AddWithValue("@slot", freeSlot);
         await insertCmd.ExecuteNonQueryAsync();
 
@@ -343,7 +342,7 @@
 
         // 2. Обновить монеты пользователя
         UserSession.CurrentUser.Coins += price;
-        await ShowCoinChange(+flower.PriceBuy, "defaultSound");
+        await ShowCoinChange(+price, "defaultSound");
 
 
         var updateCoins = new MySqlCommand("UPDATE users SET coins = @coins WHERE id = @id", conn);
@@ -369,7 +368,7 @@
         StateHasChanged();
     }
 
-    private void ThrowOutFlower(Flower flower)
+    private async void ThrowOutFlower(Flower flower)
     {
         // 1. Удалить цветок из списка цветов
         UserSession.CurrentUser.Flowers.Remove(flower);
@@ -385,7 +384,14 @@
         {
             activeQuestions.Remove(flower.Slot);
         }
+        var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
+        using var conn = new MySqlConnection(connStr);
+        await conn.OpenAsync();
 
+        // 1. Удалить цветок из таблицы
+        var deleteCmd = new MySqlCommand("DELETE FROM flowers WHERE id = @id LIMIT 1", conn);
+        deleteCmd.Parameters.AddWithValue("@id", flower.Id);
+        await deleteCmd.ExecuteNonQueryAsync();
         // 4. TODO: Удалить цветок из БД
         // Это можно добавить позже, если потребуется
 
@@ -428,6 +434,7 @@
     // }
     protected override async void OnInitialized()
     {
+        Debug.WriteLine("Новый пользователь" + UserSession.CurrentUser.IsNewUser);
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
         await LoadValidTypeIds();
@@ -438,7 +445,7 @@
         AdjustTimerInterval();
 
         await JSRuntime.InvokeVoidAsync("eval",
-      @"document.body.addEventListener(
+          @"document.body.addEventListener(
                 'click',
                 () => window.initAudio(),
                 { once: true }
@@ -468,13 +475,13 @@
         if (activeCount == 0)
             newInterval = 1000;
         else if (activeCount == 1)
-            newInterval = 1500;
+            newInterval = 2500;
         else if (activeCount == 2)
-            newInterval = 3000;
-        else if (activeCount == 3)
             newInterval = 5000;
+        else if (activeCount == 3)
+            newInterval = 8000;
         else
-            newInterval = 7000;
+            newInterval = 12000;
 
         questionTimer.Interval = newInterval;
         questionTimer.Start();
@@ -556,10 +563,10 @@
             var connStr = "Server=31.31.197.28;Port=3310;Database=u3126643_flowers_db;User=u3126643_user_app;Password=xxxKKTX6815!;Charset=utf8mb4;SslMode=none;";
             using var conn = new MySqlConnection(connStr);
             await conn.OpenAsync();
-
+            Debug.WriteLine("Бд подключена, начинаем выборку вопросов");
             var qCmd = new MySqlCommand("SELECT id, content FROM questions WHERE flowertype_id = @ftype ORDER BY RAND() LIMIT 1", conn);
             qCmd.Parameters.AddWithValue("@ftype", flower.TypeId);
-
+            Debug.WriteLine("Вопросы существуют");
             using var qReader = await qCmd.ExecuteReaderAsync();
             if (!await qReader.ReadAsync())
             {
@@ -567,7 +574,7 @@
                 activeQuestions[slot] = null;
                 return;
             }
-
+            Debug.WriteLine("Вопрос создан");
             var question = new QuestionWithAnswers
                 {
                     Id = qReader.GetInt32(0),
@@ -576,7 +583,7 @@
                 };
             var qid = question.Id;
             await qReader.CloseAsync();
-
+            Debug.WriteLine("Начинаем выборку ответов");
             var aCmd = new MySqlCommand("SELECT id, content, is_correct FROM answers WHERE question_id = @qid", conn);
             aCmd.Parameters.AddWithValue("@qid", qid);
             using var aReader = await aCmd.ExecuteReaderAsync();
@@ -589,7 +596,7 @@
                         IsCorrect = aReader.GetBoolean(2)
                     });
             }
-
+            Debug.WriteLine("Ответы существуют");
             if (question.Answers.Count == 0)
             {
                 Debug.WriteLine($"❌ Question found but no answers: {question.Content}");
@@ -705,147 +712,145 @@
         questionTimer?.Stop();
         questionTimer?.Dispose();
     }
+    private static readonly Dictionary<string, string> flowerImageMap = new()
+{
+    { "Алоэ медицины", "aloe_medicine.png" },
+    { "Кактус физики", "cactus_physics.png" },
+    { "Папоротник биологии", "fern_biology.png" },
+    { "Фикус классики", "ficus_classic.png" },
+    { "Мандариновое дерево экологии", "mandarin_ecology.png" },
+    { "Лук химии", "onion_chemistry.png" },
+    { "Орхидея поэзии", "orchid_poetry.png" },
+    { "Пальма климата", "palm_climate.png" },
+    { "Зелёный хищник", "predatory_grass.png" },
+    { "Роза бессмертия", "rose_eternal.png" },
+    { "Фиалка волны", "violet_wave.png" }
+};
+
     private string GetShopFlowerImage(Flower flower)
     {
-        // Список всех доступных изображений цветов в магазине
-        string[] shopImages = new[]
-        {
-        "aloe_medicine.png",
-        "cactus_physics.png",
-        "fern_biology.png",
-        "ficus_classic.png",
-        "mandarin_ecology.png",
-        "onion_chemistry.png",
-        "orchid_poetry.png",
-        "palm_climate.png",
-        "predatory_grass.png",
-        "rose_eternal.png",
-        "violet_wave.png"
-    };
+        if (flower == null || string.IsNullOrEmpty(flower.CodeName))
+            return "/images/flowers/empty.png";
 
-        // Найдём индекс текущего цветка в списке shopFlowers
-        int index = shopFlowers.IndexOf(flower);
-        if (index < 0) return "/images/flowers/empty.png"; // Если цветок не найден
-
-        // Возвращаем путь к изображению
-        return $"/images/flowers_shop/{shopImages[index % shopImages.Length]}";
+        return $"/images/flowers_shop/{flower.CodeName}.png";
     }
 }
-   
-       
+
+
 
 @if (UserSession.CurrentUser != null)
-{<div class="game-wrapper">
-    <div class="left-panel @panelState"></div>
-    <div class="game-container">
-                        <button class="top-left-button" @onclick="InstructionsButton"><img class="slot-icon-lamp" src="/images/icons/lamp.png"/></button>
-        <div class="game-field">
-            <div class="shelf"> 
+{
+    <div class="game-wrapper">
+        <div class="left-panel @panelState"></div>
+        <div class="game-container">
+            <button class="top-left-button" @onclick="InstructionsButton"><img class="slot-icon-lamp" src="/images/icons/lamp.png" /></button>
+            <div class="game-field">
+                <div class="shelf">
                     <div class="shelf-background"></div>  <!-- добавляем фон полки -->
-                @foreach (var slot in new[] { 0, 1, 2 })
-                {
-                    <div class="flower-slot">
-                        <!-- Горшок (должен быть внизу) -->
-                        <div class="pot-box">
-                            <img src="@GetPotImage(slot)" />
+                    @foreach (var slot in new[] { 0, 1, 2 })
+                    {
+                        <div class="flower-slot">
+                            <!-- Горшок (должен быть внизу) -->
+                            <div class="pot-box">
+                                <img src="@GetPotImage(slot)" />
+                            </div>
+
+                            <!-- Цветок (должен быть сверху) -->
+                            <div class="flower-box">
+                                <img src="@GetFlowerImage(slot)" />
+                                @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
+                                {
+                                    <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
+                                        ?
+                                    </div>
+                                }
+                            </div>
                         </div>
 
-                        <!-- Цветок (должен быть сверху) -->
-                        <div class="flower-box">
-                            <img src="@GetFlowerImage(slot)" />
-                            @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
-                            {
-                                <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
-                                    ?
-                                </div>
-                            }
-                        </div>
-                    </div>
-                 
-                 }
-            </div>
-            <div class="shelf">
-                <div class="shelf-background"></div>  <!-- добавляем фон полки -->
-                @foreach (var slot in new[] { 3, 4, 5 })
-                {
-                    <div class="flower-slot">
-                        <!-- Горшок (должен быть внизу) -->
-                        <div class="pot-box">
-                            <img src="@GetPotImage(slot)" />
-                        </div>
+                    }
+                </div>
+                <div class="shelf">
+                    <div class="shelf-background"></div>  <!-- добавляем фон полки -->
+                    @foreach (var slot in new[] { 3, 4, 5 })
+                    {
+                        <div class="flower-slot">
+                            <!-- Горшок (должен быть внизу) -->
+                            <div class="pot-box">
+                                <img src="@GetPotImage(slot)" />
+                            </div>
 
-                        <!-- Цветок (должен быть сверху) -->
-                        <div class="flower-box">
-                            <img src="@GetFlowerImage(slot)" />
-                            @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
-                            {
-                                <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
-                                    ?
-                                </div>
-                            }
+                            <!-- Цветок (должен быть сверху) -->
+                            <div class="flower-box">
+                                <img src="@GetFlowerImage(slot)" />
+                                @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
+                                {
+                                    <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
+                                        ?
+                                    </div>
+                                }
+                            </div>
                         </div>
-                    </div>
-                }
-            </div>
-        
-        </div>
-        <div class="money-container">
-            <img class="money-icon" src="images/icons/money.png" />
-            <div class="money-amount">@UserSession.CurrentUser.Coins</div>
-        </div>
+                    }
+                </div>
 
-        <div class="slots-panel">
-            <div class="slot-button" @onclick="OpenMyFlowers">
-                <img class="slot-icon" src="images/icons/my_flowers.png" />
             </div>
-            <div class="slot-button" @onclick="OpenShop">
-                <img class="slot-icon" src="images/icons/shop.png" />
+            <div class="money-container">
+                <img class="money-icon" src="images/icons/money.png" />
+                <div class="money-amount">@UserSession.CurrentUser.Coins</div>
             </div>
-            <div class="slot-button" @onclick="OpenSettings">
-                <img class="slot-icon" src="images/icons/settings.png" />
-            </div>
-            @*             <div class="slot-button" @onclick="GoToLogin">
+
+            <div class="slots-panel">
+                <div class="slot-button" @onclick="OpenMyFlowers">
+                    <img class="slot-icon" src="images/icons/my_flowers.png" />
+                </div>
+                <div class="slot-button" @onclick="OpenShop">
+                    <img class="slot-icon" src="images/icons/shop.png" />
+                </div>
+                <div class="slot-button" @onclick="OpenSettings">
+                    <img class="slot-icon" src="images/icons/settings.png" />
+                </div>
+                @*             <div class="slot-button" @onclick="GoToLogin">
                 <img class="slot-icon" src="images/icons/home.png" />
             </div> *@
-        </div>
-    </div>
-        <!-- Модальные окна -->
-    <!-- Модальные окна -->
-    @if (showSettings || showShop || showMyFlowers)
-    {
-        <div class="modal-overlay"></div>
-    }
-
-    @if (showSettings)
-    {
-        <div class="modal_settings">
-            <h2>@Localizer["SettingsHeader"]</h2>
-
-            <label>
-                @Localizer["LanguageLabel"]
-                <select @bind="SelectedLanguage">
-                    <option value="ru">@Localizer["RussianOption"]</option>
-                    <option value="en">@Localizer["EnglishOption"]</option>
-                </select>
-            </label>
-
-           
-            <label>
-                @Localizer["MusicVolumeLabel"]
-                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="MusicVolume" @bind-value:event="oninput" />
-            </label>
-
-            <label>
-                @Localizer["EffectsVolumeLabel"]
-                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="EffectsVolume" @bind-value:event="oninput" />
-            </label>
-
-            <div class="modal-buttons">
-                <button @onclick="GoToLogin">@Localizer["LogoutButtonText"]</button>
-                <button @onclick="CloseModals">@Localizer["CloseButtonText"]</button>
             </div>
         </div>
-    }
+        <!-- Модальные окна -->
+        <!-- Модальные окна -->
+        @if (showSettings || showShop || showMyFlowers)
+        {
+            <div class="modal-overlay"></div>
+        }
+
+        @if (showSettings)
+        {
+            <div class="modal_settings">
+                <h2>@Localizer["SettingsHeader"]</h2>
+
+                <label>
+                    @Localizer["LanguageLabel"]
+                    <select @bind="SelectedLanguage">
+                        <option value="ru">@Localizer["RussianOption"]</option>
+                        <option value="en">@Localizer["EnglishOption"]</option>
+                    </select>
+                </label>
+
+
+                <label>
+                    @Localizer["MusicVolumeLabel"]
+                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="MusicVolume" @bind-value:event="oninput" />
+                </label>
+
+                <label>
+                    @Localizer["EffectsVolumeLabel"]
+                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="EffectsVolume" @bind-value:event="oninput" />
+                </label>
+
+                <div class="modal-buttons">
+                    <button @onclick="GoToLogin">@Localizer["LogoutButtonText"]</button>
+                    <button @onclick="CloseModals">@Localizer["CloseButtonText"]</button>
+                </div>
+            </div>
+        }
 
 
         @if (showShop)
@@ -877,37 +882,37 @@
             </div>
         }
 
-    @if (showShopError)
-    {
-        <div class="modal-overlay"></div>
-        <div class="modal1 error-modal show">
-            <button class="close-btn" @onclick="() => showShopError = false">×</button>
-            <h3 class="modal-title">@shopTitleMessage</h3>
-            <p>@shopErrorMessage</p>
-        </div>
-    }
+        @if (showShopError)
+        {
+            <div class="modal-overlay"></div>
+            <div class="modal1 error-modal show">
+                <button class="close-btn" @onclick="() => showShopError = false">×</button>
+                <h3 class="modal-title">@shopTitleMessage</h3>
+                <p>@shopErrorMessage</p>
+            </div>
+        }
 
-    @if (showMyFlowers)
-    {
-        <div class="modal1">
-            <h3>@Localizer["FlowerHeadder"]</h3>
-            <div class="shop-scroll-wrapper">
-                @if (UserSession.CurrentUser.Flowers.Count > 0)
-                {
-                    <div class="flower-grid">
+        @if (showMyFlowers)
+        {
+            <div class="modal1">
+                <h3>@Localizer["FlowerHeadder"]</h3>
+                <div class="shop-scroll-wrapper">
+                    @if (UserSession.CurrentUser.Flowers.Count > 0)
+                    {
+                        <div class="flower-grid">
 
-                        @foreach (var flower in UserSession.CurrentUser.Flowers.OrderBy(f => f.Slot))
-                        {
-                            var state = flower.GetStateImage().Split('/').Last().Replace(".png", "");
-                            int sellPrice = flower.PriceSell;
-
-                            switch (state)
+                            @foreach (var flower in UserSession.CurrentUser.Flowers.OrderBy(f => f.Slot))
                             {
-                                case "pre_fall": sellPrice /= 2; break;
-                                case "fall": sellPrice = 0; break;
-                                case "pre_rise": sellPrice = (int)(sellPrice * 1.5); break;
-                                case "rise": sellPrice *= 2; break;
-                            }
+                                var state = flower.GetStateImage().Split('/').Last().Replace(".png", "");
+                                int sellPrice = flower.PriceSell;
+
+                                switch (state)
+                                {
+                                    case "pre_fall": sellPrice /= 2; break;
+                                    case "fall": sellPrice = 0; break;
+                                    case "pre_rise": sellPrice = (int)(sellPrice * 1.5); break;
+                                    case "rise": sellPrice *= 2; break;
+                                }
                                 <div class="flower-card">
                                     <div class="image-stack">
                                         <img src="/images/box/cream_box.png" class="pot-image" />
@@ -918,7 +923,7 @@
                                     <div class="flower-status">@GetStateDisplayName(state, flower)</div>
                                     <div class="spacer"></div> <!-- вот эта вставка важна -->
                                     <div class="flower-actions">
-                                        
+
                                         @if (flower.IsDead)
                                         {
                                             <button class="flower-button remove" @onclick="() => ThrowOutFlower(flower)">
@@ -934,54 +939,30 @@
                                     </div>
                                 </div>
 
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        zeroFlowersMessage = "У вас нет цветов, купите их в магазине!";
+                        <p>@zeroFlowersMessage</p>
+                    }
+                </div>
+                <button class="close-full-button" @onclick="CloseModals">
+                    @Localizer["CloseButtonText"]
+                </button>
 
-
-                            @* <div class="flower-card">
-                                <img src="@flower.GetStateImage()" class="flower-img"/>
-                                <div class="flower-name">@flower.DisplayName</div>
-                                <div class="flower-state">@Localizer["FlowerState"]@state</div>
-                                <div class="flower-action">
-                                    @if (flower.IsDead)
-                                    {
-                                        <button class="action-button throw" @onclick="() => ThrowOutFlower(flower)">
-                                            🗑
-                                            <span>@Localizer["RemovePlantTag"]</span>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button class="action-button" @onclick="() => SellFlower(flower, sellPrice)">
-                                            @Localizer["SellPriceTag"] @sellPrice
-                                        </button>
-
-                                    }
-
-                                </div>
-                            </div> *@
-                        }
-                    </div>
-                }
-                else
-                {
-                    zeroFlowersMessage = "У вас нет цветов, купите их в магазине!";
-                    <p>@zeroFlowersMessage</p>
-                }  
             </div>
-            <button class="close-full-button" @onclick="CloseModals">
-                @Localizer["CloseButtonText"]
-            </button>
+        }
 
-        </div>
-    }
-    
-    @if (currentQuestionSlot != null && activeQuestions.ContainsKey(currentQuestionSlot.Value))
-    {
-        var question = activeQuestions[currentQuestionSlot.Value];
-        if (question != null)
+        @if (currentQuestionSlot != null && activeQuestions.ContainsKey(currentQuestionSlot.Value))
         {
-            <div class="question-modal">
-                <h3>@Localizer["QestionHeader"]</h3>
-                <p>@question.Content</p>
+            var question = activeQuestions[currentQuestionSlot.Value];
+            if (question != null)
+            {
+                <div class="question-modal">
+                    <h3>@Localizer["QestionHeader"]</h3>
+                    <p>@question.Content</p>
                     @foreach (var answer in question.Answers)
                     {
                         <label>
@@ -999,11 +980,11 @@
                     }
 
 
-                <button class="action-button1" @onclick="SubmitAnswer">Ответить</button>
-                <button class="close-full-button1" @onclick="CloseQuestionModal">Закрыть</button>
-            </div>
+                    <button class="action-button1" @onclick="SubmitAnswer">Ответить</button>
+                    <button class="close-full-button1" @onclick="CloseQuestionModal">Закрыть</button>
+                </div>
+            }
         }
-    }
         <script src="audio.js"></script>
         <audio id="backgroundMusic"
                src="/audio/background-loop.mp3"
@@ -1018,7 +999,7 @@
 
         @if (ShowCoinNotification)
         {
-@*             <div class="coin-notification @(IsPositiveCoin ? "positive" : "negative")">
+            @*             <div class="coin-notification @(IsPositiveCoin ? "positive" : "negative")">
                 <span>@CoinMessage</span>
             </div> *@
             <div class="coin-notification
@@ -1026,6 +1007,6 @@
                 <span>@CoinMessage</span>
             </div>
         }
- </div>
+    </div>
 
- }
+}
