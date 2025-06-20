@@ -44,6 +44,7 @@
     private string shopTitleMessage = "";
     private string shopErrorMessage = "";
     private string zeroFlowersMessage = "";
+    private string panelState = "hidden";
     private int _musicVolume = 100;
     public int MusicVolume
     {
@@ -233,6 +234,12 @@
 
         StateHasChanged();
     }
+
+    private void InstructionsButton()
+    {
+        panelState = panelState == "hidden" ? "visible" : "hidden";
+    }
+
 
     private static readonly string[] PotImages = new[]
     {
@@ -733,9 +740,14 @@
         return $"/images/flowers_shop/{shopImages[index % shopImages.Length]}";
     }
 }
+   
+       
+
 @if (UserSession.CurrentUser != null)
 {<div class="game-wrapper">
+    <div class="left-panel @panelState"></div>
     <div class="game-container">
+                        <button class="top-left-button" @onclick="InstructionsButton"><img class="slot-icon-lamp" src="/images/icons/lamp.png"/></button>
         <div class="game-field">
             <div class="shelf"> 
                     <div class="shelf-background"></div>  <!-- добавляем фон полки -->
