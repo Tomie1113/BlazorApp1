@@ -71,10 +71,14 @@
                 insertCmd.Parameters.AddWithValue("@exp", expires);
                 await insertCmd.ExecuteNonQueryAsync();
 
+
+                await JS.InvokeVoidAsync("CookieHelper.set", "authToken", token, 1);
+
                 await JS.InvokeVoidAsync("localStorage.setItem", "auth_token", token);
 
                 UserSession.CurrentUser = await UserRepository.LoadUserById(userId, conn);
                 UserSession.CurrentUser.IsNewUser = false;
+
 
                 CurrentUserSvc.User = await UserRepository.LoadUserById(userId, conn);
                 CurrentUserSvc.User.IsNewUser = false;
@@ -230,7 +234,7 @@
             await insertTokenCmd.ExecuteNonQueryAsync();
 
             // Сохраняем токен в localStorage (через JS позже)
-            await JS.InvokeVoidAsync("localStorage.setItem", "auth_token", token);
+            await JS.InvokeVoidAsync("CookieHelper.set", "authToken", token, 1);
 
             debug = "✅ Регистрация завершена";
             isRegistering = false;
