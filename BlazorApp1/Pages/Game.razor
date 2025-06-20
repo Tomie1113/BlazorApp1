@@ -36,6 +36,15 @@
                 () => window.initAudio(),
                 { once: true }
               );");
+            var req = httpContextAccessor.HttpContext?.Request;
+            if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
+                int.TryParse(mvStr, out var mv))
+                MusicVolume = mv;
+
+            if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
+                int.TryParse(evStr, out var ev))
+                EffectsVolume = ev;
+
         }
     }
     private bool ShowCoinNotification = false;
@@ -444,15 +453,6 @@
     protected override async void OnInitialized()
     {
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-
-        var req = httpContextAccessor.HttpContext?.Request;
-        if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
-            int.TryParse(mvStr, out var mv))
-            MusicVolume = mv;
-
-        if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
-            int.TryParse(evStr, out var ev))
-            EffectsVolume = ev;
 
         await LoadValidTypeIds();
 
