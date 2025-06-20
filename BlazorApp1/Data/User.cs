@@ -10,4 +10,12 @@
         public bool IsNewUser { get; set; }
         public List<Flower> Flowers { get; set; } = new(); // 🌸 вот это поле
     }
+    public interface ICurrentUserService
+    {
+        User? User { get; set; }
+    }
+        public class CurrentUserService : ICurrentUserService
+        {
+            public User? User { get; set; }
+        }
 }
