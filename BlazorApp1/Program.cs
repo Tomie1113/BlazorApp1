@@ -25,6 +25,12 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.RequestCultureProviders = new[] { new CookieRequestCultureProvider() };
 });
 
+builder.Services
+  // make sure IHttpContextAccessor is available if you need it later
+  .AddHttpContextAccessor()
+  // register the per-circuit user holder
+  .AddScoped<ICurrentUserService, CurrentUserService>();
+
 var app = builder.Build();
 
 // Configure the supported cultures and the default culture

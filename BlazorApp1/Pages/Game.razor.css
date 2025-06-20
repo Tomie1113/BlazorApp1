@@ -1,4 +1,95 @@
-﻿.game-wrapper {
+@media (max-width: 600px) {
+    .game-wrapper {
+        display: flex !important;
+        position: fixed !important;
+        justify-content: center !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: 0 !important;
+        flex-direction: column !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .game-container {
+        display: flex !important;
+        position: fixed !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        padding: 0 !important;
+    }
+
+    .slots-panel {
+        position: fixed !important;
+        bottom: 0 !important;
+        top: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        background: transparent !important;
+        z-index: 1000 !important;
+    }
+
+    .slot-button {
+        cursor: pointer;
+        width: fit-content;
+        transform: rotate(90deg)
+    }
+
+    .slot-icon {
+        transform: rotate(90deg);
+        margin: 0 auto;
+    }
+
+    .game-field {
+        position: center !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        margin: auto !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .shelf-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .shelf {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        height: 35vh;
+        margin-top: 0;
+        gap: 0;
+        border: none;
+        z-index: 0;
+    }
+
+    .flower-slot {
+        width: 20vw;
+        height: 20vw;
+    }
+
+    .flower-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill);
+        gap: 1px;
+        justify-items: center;
+    }
+}
+
+.game-wrapper {
+    user-select: none;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -11,6 +102,7 @@
 
 
 .game-container {
+    user-select: none;
     position: relative;
     width: 100vmin;
     height: 80vmin;
@@ -176,7 +268,6 @@
 .flower-slot {
     width: 80px;
     height: 80px;
-
 }
 
 .game-container .money-container {
@@ -247,8 +338,10 @@
 .slot-icon-lamp {
     margin: 0 !important; /* Убедись, что нет внешних отступов */
     padding: 0 !important;
-    width: 100%; !important; /* высота относительно экрана */
-    height: 100%; !important;
+    width: 100%;
+    !important; /* высота относительно экрана */
+    height: 100%;
+    !important;
     transform: scale(1.1);
     /*transition: transform 0.3s ease, opacity 0.3s ease;*/
 }
@@ -260,10 +353,10 @@
     /*border-radius: 1vh;*/
 }
 
-    .slot-icon:hover {
-        transform: translateX(0) rotate(90deg); /* выдвигается, но остаётся повернутой */
-        opacity: 1;
-    }
+.slot-icon:hover {
+    transform: translateX(0) rotate(90deg); /* выдвигается, но остаётся повернутой */
+    opacity: 1;
+}
 
 .modal-overlay {
     position: fixed !important;
@@ -418,6 +511,7 @@
             .modal1 button:last-child:hover {
                 background-color: #f8f8f8 !important;
             }
+
 input[type="range"] {
     appearance: none !important;
     height: 10px !important;
@@ -439,18 +533,18 @@ input[type="range"] {
         margin-top: -4px !important;
         cursor: pointer !important;
     }
-.game-field {
-    position: absolute !important; /* чтобы вырваться из центрирования */
-    top: 6vh !important; /* отступ сверху адаптивно */
-    left: 2vw !important; /* отступ слева адаптивно */
-    display: flex !important;
-    flex-direction: column !important;
-    gap:1vh !important;
-    width: 80% !important;
-    height: 80% !important;
-    transform-origin: top left !important; /* ← Масштабируем от верхнего левого угла */
-    z-index: 10;
 
+.game-field {
+    position: absolute ; /* чтобы вырваться из центрирования */
+    top: 6vh ; /* отступ сверху адаптивно */
+    left: 2vw ; /* отступ слева адаптивно */
+    display: flex ;
+    flex-direction: column ;
+    gap: 1vh ;
+    width: 80% ;
+    height: 80% ;
+    transform-origin: top left ; /* ← Масштабируем от верхнего левого угла */
+    z-index: 10;
 }
 
 .shelf {
@@ -541,7 +635,6 @@ input[type="range"] {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1px;
-
     justify-items: center;
 }
 /*.flower-card {
@@ -562,6 +655,7 @@ input[type="range"] {
     flex-grow: 1;
     width: 100%;
 }
+
 .flower-card {
     display: flex;
     flex-direction: column;
@@ -574,9 +668,11 @@ input[type="range"] {
     background: white;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
+
     .flower-card:hover {
         transform: scale(1.02);
     }
+
 .image-stack {
     position: relative;
     width: 140px;
@@ -594,6 +690,7 @@ input[type="range"] {
     object-fit: contain;
     z-index: 1;
 }
+
 .flower-image1 {
     position: absolute;
     bottom: 0px; /* Регулируем высоту стебля относительно горшка */
@@ -628,12 +725,12 @@ input[type="range"] {
     color: #6a5a3b;
     margin-bottom: 12px;
 }
+
 .action-button {
     position: absolute;
     bottom: 10px;
     left: 10px;
     right: 10px;
-    
     background-color: #8B4513;
     color: white;
     border: none;
@@ -687,12 +784,12 @@ input[type="range"] {
 
 .shop-scroll-wrapper {
     max-height: 50vh; /* или 50vh, если хочешь адаптивно */
-    max-width: 40vh; /* или 50vh, если хочешь адаптивно */
     overflow-y: auto;
     margin-bottom: 16px;
     padding-right: 4px; /* чтобы не обрезало тени у карточек */
     padding-right: 4px; /* чтобы не обрезало тени у карточек */
 }
+
     .shop-scroll-wrapper::-webkit-scrollbar {
         width: 6px;
     }
@@ -716,8 +813,11 @@ input[type="range"] {
     z-index: 50;
     box-shadow: 0 0 6px rgba(0,0,0,0.2);
     transition: transform 0.2s ease;
+
+    font-family: 'Grenze Gotisch', cursive;
     /* nothing else in your CSS will catch it */
 }
+
 
 .question-bubble.active {
     border: 1px solid green;
@@ -731,18 +831,21 @@ input[type="range"] {
     }
 
 
-    .question-bubble img {
-        width: 24px;
-        height: 24px;
-    }
+
+.question-bubble img {
+    width: 24px;
+    height: 24px;
+}
 
 
-    /* Эффект при наведении: увеличиваем полностью весь пузырёк */
-    .question-bubble:hover {
-        transform: translateX(-50%) scale(1.3);
-        box-shadow: 0 0 16px rgba(0, 0, 0, 0.5);
-    }
+/* Эффект при наведении: увеличиваем полностью весь пузырёк */
+.question-bubble:hover {
+    transform: translateX(-50%) scale(1.3);
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.5);
+}
+
 .question-modal {
+    user-select: none;
     background: #fffaf0;
     border: 2px solid #8B4513;
     border-radius: 16px;
@@ -820,7 +923,9 @@ input[type="range"] {
         .question-modal .close-full-button:hover {
             background-color: #f5e6d0;
         }
+
 .coin-notification {
+    user-select: none;
     position: fixed;
     top: 25%;
     left: 50%;
@@ -833,6 +938,7 @@ input[type="range"] {
     z-index: 1000;
     pointer-events: none;
 }
+
     .coin-notification.positive {
         background-color: rgba(40, 167, 69, 0.5);
         animation: floatUpAndFade 1.5s ease-out forwards;
@@ -842,6 +948,7 @@ input[type="range"] {
         background-color: rgba(220, 53, 69, 0.5);
         animation: fallAndBounce 1.5s ease-out forwards;
     }
+
 @keyframes fallAndBounce {
     0% {
         transform: translate(-50%, -40px);
@@ -885,6 +992,7 @@ input[type="range"] {
         opacity: 0;
     }
 }
+
 .action-button1 {
     background-color: #8B4513;
     color: white;
@@ -905,6 +1013,7 @@ input[type="range"] {
     .action-button1:hover {
         background-color: #5a2e1d;
     }
+
 .close-full-button1 {
     margin-top: 20px;
     background-color: #fffaf0;
@@ -926,6 +1035,7 @@ input[type="range"] {
     .close-full-button1:hover {
         background-color: #f5e6d0;
     }
+
 
 .tutorial-prompt-overlay {
     position: fixed;
@@ -1024,6 +1134,7 @@ input[type="range"] {
         box-shadow: 0 0 5px 0 #1d4e1d;
     }
 }
+
 
 @keyframes floatUpAndFad233 {
     0% {

@@ -4,6 +4,7 @@
 @using MySql.Data.MySqlClient
 @using BlazorApp1.Data
 @using System.Diagnostics;
+@inject ICurrentUserService CurrentUserSvc
 
 @code {
     private bool _navigated = false;
@@ -38,15 +39,19 @@
                 int userId = reader.GetInt32(0);
                 reader.Close(); // обязательно закрываем перед следующим запросом
 
-                UserSession.CurrentUser = await UserRepository.LoadUserById(userId, conn);
+                CurrentUserSvc.User = await UserRepository.LoadUserById(userId, conn);
 
-                Debug.WriteLine($" User loaded: {UserSession.CurrentUser.Username}, Email: {UserSession.CurrentUser.Email}, Coins: {UserSession.CurrentUser.Coins}");
-                foreach (var flower in UserSession.CurrentUser.Flowers)
+                Debug.WriteLine($" User loaded: {CurrentUserSvc.User.Username}, Email: {CurrentUserSvc.User.Email}, Coins: {CurrentUserSvc.User.Coins}");
+                foreach (var flower in CurrentUserSvc.User.Flowers)
                 {
                     Debug.WriteLine($" 🌸 Flower slot {flower.Slot}: {flower.DisplayName} (CodeName: {flower.CodeName}, HP: {flower.Hp}/15)");
                 }
 
+
                 UserSession.CurrentUser.IsNewUser = false;
+
+                CurrentUserSvc.User.IsNewUser = false;
+
                 Navigation.NavigateTo("/main");
             }
             else
@@ -61,5 +66,7 @@
             Navigation.NavigateTo("/registration");
             _navigated = true;
         }
+        Navigation.NavigateTo("/registration");
+             _navigated = true;
     }
 }
