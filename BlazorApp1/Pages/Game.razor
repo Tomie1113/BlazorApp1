@@ -39,13 +39,31 @@
         }
     }
     private bool ShowCoinNotification = false;
+    private bool showTutorialPrompt = false;
+    private bool tutorialYes = false;
     private string CoinMessage = "";
     private bool IsPositiveCoin = true;
     private string shopTitleMessage = "";
     private string shopErrorMessage = "";
     private string zeroFlowersMessage = "";
     private string panelState = "hidden";
+    private string buttonState = "hidden";
     private int _musicVolume = 100;
+    private int countTutor = 1;
+    private string idElement = "";
+    private bool IsLeftPanelActive = false;
+
+    private bool TutorFlower = false;
+    private bool TutorQuestion = false;
+    private bool TutorMoney = false;
+    private bool TutorSettings = false;
+    private bool TutorMyFlowers = false;
+    private bool TutorInstruct = false;
+    private bool TutorShop = false;
+    private bool TutorEnd = false;
+    private string InstructionTytle = "";
+    private string InstructionText = "";
+
     public int MusicVolume
     {
         get => _musicVolume;
@@ -57,6 +75,16 @@
             _ = JSRuntime.InvokeVoidAsync("saveVolumePrefs", _musicVolume, _effectsVolume);
 
         }
+    }
+
+    public class DomRect
+    {
+        public double Top { get; set; }
+        public double Left { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public double Right { get; set; }
+        public double Bottom { get; set; }
     }
 
     private int _effectsVolume = 100;
@@ -71,6 +99,8 @@
             _ = JSRuntime.InvokeVoidAsync("saveVolumePrefs", _musicVolume, _effectsVolume);
         }
     }
+
+
 
     private async Task ShowCoinChange(int delta, string sound = "defaultSound")
     {
@@ -426,23 +456,14 @@
         public bool IsCorrect { get; set; }
     }
 
-    // protected override async void OnInitialized()
-    // {
-    //     selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-
-    //     // Слушаем первое кликовое действие
-    //     _ = JSRuntime.InvokeVoidAsync("eval", "document.body.addEventListener('click', () => window.initAudio(), { once: true })");
-
-    //     await LoadValidTypeIds();
-    //     questionTimer = new System.Timers.Timer(1000);
-    //     questionTimer.Elapsed += async (s, e) => { await AskNextQuestion(); };
-    //     questionTimer.AutoReset = true;
-    //     questionTimer.Start();
-
-    //     await AskNextQuestion();
-    // }
     protected override async void OnInitialized()
     {
+        //if (UserSession.CurrentUser.IsNewUser)
+        if (true)
+        {
+            showTutorialPrompt = true;
+        }
+
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
         var req = httpContextAccessor.HttpContext?.Request;
@@ -460,6 +481,7 @@
         questionTimer.Elapsed += async (s, e) => await HandleTimerTick();
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
+        InstructionTextBox();
     }
 
 
@@ -739,15 +761,112 @@
         // Возвращаем путь к изображению
         return $"/images/flowers_shop/{shopImages[index % shopImages.Length]}";
     }
+
+    private void StartTutorial()
+    {
+        showTutorialPrompt = false;
+        IsLeftPanelActive = true;
+        panelState = panelState == "hidden" ? "visible" : "hidden";
+        buttonState = buttonState == "hidden" ? "visible" : "hidden";
+        TutorClick();
+    }
+
+    private void TutorClick()
+    {
+        switch (countTutor)
+        {
+            case 1:
+                InstructionTytle = "Твой домашний сад";
+                InstructionText = "Смотри - это твой маленький домашний сад. Здесь ты можешь выращивать свои растения, но они необычные: их не нужно поливать и удобрять, но важно правильно отвечать на их вопросы!";
+                TutorFlower = true;
+                countTutor++;
+                break;
+            case 2:
+                InstructionTytle = "Вопросы";
+                InstructionText = "Это - те самые вопросы. Можешь попробовать ответить на них, и, если ответишь правильно, тебе начислят 5 монеток! Но если ошибешься - твое растение начнет вянуть! Следи, чтобы не пришлось его выкидывать!";
+                TutorFlower = false;
+                TutorQuestion = true;
+                countTutor++;
+                break;
+            case 3:
+                InstructionTytle = "Твои монеты";
+                InstructionText = "На этом поле ты можешь посмотреть свое количество монет. Они тебе пригодятся для покупки новых видов цветов!";
+                TutorQuestion = false;
+                TutorMoney = true;
+                countTutor++;
+                break;
+            case 4:
+                InstructionTytle = "Продажа цветов";
+                InstructionText = "А тут ты можешь продать свои цветы. Чем лучше самочувствие у цветка - тем больше ты можешь заработать!";
+                TutorMoney = false;
+                TutorMyFlowers = true;
+                countTutor++;
+                break;
+            case 5:
+                InstructionTytle = "Покупка цветов";
+                InstructionText = "Теперь - самое интересное. Это магазин! Тут ты можешь купить самые разные цветы и расширить свою коллекцию. Цветы продаются в стандартном состоянии, но ты можешь заставить их расцвести!";
+                TutorMyFlowers = false;
+                TutorShop = true;
+                countTutor++;
+                break;
+            case 6:
+                InstructionTytle = "Настройки";
+                InstructionText = "Если тебе не нравится громкость музыки или эффектов, тут ты сможешь настроить громкость для себя!";
+                TutorShop = false;
+                TutorSettings = true;
+                countTutor++;
+                break;
+            case 7:
+                InstructionTytle = "Инструкция";
+                InstructionText = "На этом все! Как видишь, тут все просто. Но если ты что-то забудешь - можешь нажать на эту кнопку, и всплывет окно с инструкцией. Приятного выращивания!";
+                TutorSettings = false;
+                TutorInstruct = true;
+                countTutor++;
+                break;
+            case 8:
+                InstructionTextBox();
+                TutorInstruct = false;
+                TutorEnd = true;
+                buttonState = buttonState == "hidden" ? "visible" : "hidden";
+                panelState = panelState == "hidden" ? "visible" : "hidden";
+                IsLeftPanelActive = false;
+                break;
+        }
+
+        StateHasChanged(); // Обновляем UI после изменения currentRect
+    }
+
+    private void InstructionTextBox()
+    {
+        InstructionTytle = "Инструкция";
+        InstructionText = "Это - твой маленький домашний сад. Здесь ты можешь выращивать свои растения, их не нужно поливать и удобрять, но важно правильно отвечать на их вопросы. Если ответ правильный, тебе начислят 5 монет, при ошибке - твое растение начнет вянуть. При большом количестве ошибок цветок полностью завянет и его придется выкинуть. Справа сверху указано твое количество монет. Чтобы продать или купить цветы, нужно открыть вкладку с тележкой или цветком. Во вкладке настроек можно поменять громкость. Приятного выращивания!";
+    }
+    
+
 }
    
        
 
 @if (UserSession.CurrentUser != null)
-{<div class="game-wrapper">
-    <div class="left-panel @panelState"></div>
+{
+    <div class="game-wrapper">
+        <div class="left-panel @panelState @(IsLeftPanelActive ? "active" : "")">
+                <div class="text-container">
+            <div class="text-window">
+                <h3>@InstructionTytle</h3>
+                            <p style="text-align: left;">@InstructionText</p>
+                            
+                       </div>
+                                       <button class="next-button @buttonState @(TutorEnd ? "active" : "")" @onclick="TutorClick">Далее</button>
+                                           <div class="image-container">
+                               <img src="/images/icons/toad.png" class="bottom-image" />
+                                   </div>
+                       </div>
+                           
+    </div>
     <div class="game-container">
-                        <button class="top-left-button" @onclick="InstructionsButton"><img class="slot-icon-lamp" src="/images/icons/lamp.png"/></button>
+               <button class="top-left-button @(TutorInstruct ? "active" : "")" @onclick="InstructionsButton"><img src="/images/icons/lamp.png"/></button>
+                                    
         <div class="game-field">
             <div class="shelf"> 
                     <div class="shelf-background"></div>  <!-- добавляем фон полки -->
@@ -760,11 +879,11 @@
                         </div>
 
                         <!-- Цветок (должен быть сверху) -->
-                        <div class="flower-box">
-                            <img src="@GetFlowerImage(slot)" />
+                                <div class="flower-box">
+                                    <img class="@(TutorFlower ? "active" : "")" src="@GetFlowerImage(slot)" />
                             @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
                             {
-                                <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
+                                <div class="question-bubble @(TutorQuestion ? "active" : "")" @onclick="@(() => OpenQuestionModal(slot))">
                                     ?
                                 </div>
                             }
@@ -777,7 +896,7 @@
                 <div class="shelf-background"></div>  <!-- добавляем фон полки -->
                 @foreach (var slot in new[] { 3, 4, 5 })
                 {
-                    <div class="flower-slot">
+                                            <div class="flower-slot">
                         <!-- Горшок (должен быть внизу) -->
                         <div class="pot-box">
                             <img src="@GetPotImage(slot)" />
@@ -785,10 +904,10 @@
 
                         <!-- Цветок (должен быть сверху) -->
                         <div class="flower-box">
-                            <img src="@GetFlowerImage(slot)" />
+                                  <img class="@(TutorFlower ? "active" : "")" src="@GetFlowerImage(slot)" />
                             @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
                             {
-                                <div class="question-bubble" @onclick="@(() => OpenQuestionModal(slot))">
+                                <div id="questionId" class="question-bubble @(TutorQuestion ? "active" : "")"  @onclick="@(() => OpenQuestionModal(slot))">
                                     ?
                                 </div>
                             }
@@ -798,25 +917,38 @@
             </div>
         
         </div>
-        <div class="money-container">
-            <img class="money-icon" src="images/icons/money.png" />
+            <div id="moneyId" class="money-container">
+                <img class="money-icon @(TutorMoney ? "active" : "")" src="images/icons/money.png" />
             <div class="money-amount">@UserSession.CurrentUser.Coins</div>
         </div>
 
         <div class="slots-panel">
             <div class="slot-button" @onclick="OpenMyFlowers">
-                <img class="slot-icon" src="images/icons/my_flowers.png" />
+                        <img class="slot-icon @(TutorMyFlowers ? "active" : "")" src="images/icons/my_flowers.png" />
             </div>
             <div class="slot-button" @onclick="OpenShop">
-                <img class="slot-icon" src="images/icons/shop.png" />
+                    <img class="slot-icon @(TutorShop ? "active" : "")" src="images/icons/shop.png" />
             </div>
             <div class="slot-button" @onclick="OpenSettings">
-                <img class="slot-icon" src="images/icons/settings.png" />
+                    <img class="slot-icon @(TutorSettings ? "active" : "")" src="images/icons/settings.png" />
             </div>
             @*             <div class="slot-button" @onclick="GoToLogin">
                 <img class="slot-icon" src="images/icons/home.png" />
             </div> *@
         </div>
+            @if (showTutorialPrompt)
+            {
+                        <div class="tutorial-prompt-overlay">
+                            <div class="tutorial-prompt-container">
+                                <h3>Обучение</h3>
+                                <p>Привет! Вижу, ты тут впервые. Хочешь пройти краткое обучение по игре?</p>
+                                <div class="tutorial-prompt-buttons">
+                                            <button class="btn-yes" @onclick="StartTutorial">Да, конечно!</button>
+                                                                    <button class="btn-no" @onclick="() => showTutorialPrompt = false ">Нет, спасибо</button>
+                                </div>
+                            </div>
+                        </div>
+            }
     </div>
         <!-- Модальные окна -->
     <!-- Модальные окна -->
@@ -824,6 +956,7 @@
     {
         <div class="modal-overlay"></div>
     }
+
 
     @if (showSettings)
     {
@@ -871,7 +1004,7 @@
                                 <div class="flower-name">@flower.DisplayName</div>
                                 <div class="spacer"></div> <!-- вот эта вставка важна -->
                                 <div class="flower-action">
-                                    <button class="flower-button" @onclick="@(async () => { BuyFlower(flower); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                                   <button class="flower-button" @onclick="@(async () => { BuyFlower(flower); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
                                         @Localizer["BuyPriceTag"]@flower.PriceBuy
                                     </button>
                                 </div>
@@ -890,9 +1023,11 @@
     {
         <div class="modal-overlay"></div>
         <div class="modal1 error-modal show">
-            <button class="close-btn" @onclick="() => showShopError = false">×</button>
             <h3 class="modal-title">@shopTitleMessage</h3>
             <p>@shopErrorMessage</p>
+                        <button class="close-full-button" @onclick="@(async () => { showShopError = false; await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                    @Localizer["CloseButtonText"]
+                </button>
         </div>
     }
 
@@ -936,7 +1071,7 @@
                                         }
                                         else
                                         {
-                                            <button class="flower-button" @onclick="() => SellFlower(flower, sellPrice)">
+                                                                <button class="flower-button" @onclick="() => SellFlower(flower, sellPrice)">
                                                 @Localizer["SellPriceTag"] @sellPrice
                                             </button>
                                         }
@@ -1013,7 +1148,7 @@
             </div>
         }
     }
-        <script src="audio.js"></script>
+        
         <audio id="backgroundMusic"
                src="/audio/background-loop.mp3"
                preload="auto"

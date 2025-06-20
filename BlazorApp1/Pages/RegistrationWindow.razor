@@ -72,7 +72,7 @@
 
                 await JS.InvokeVoidAsync("localStorage.setItem", "auth_token", token);
                 UserSession.CurrentUser = await UserRepository.LoadUserById(userId, conn);
-
+                UserSession.CurrentUser.IsNewUser = false;
 
                 Navigation.NavigateTo("/main");
             }
@@ -185,6 +185,7 @@
                     Coins = 0,
                     Flowers = flowers
                 };
+            UserSession.CurrentUser.IsNewUser = true;
 
 
             // ❗ Удаляем старые токены на всякий случай (если регаешься повторно под тем же user_id)

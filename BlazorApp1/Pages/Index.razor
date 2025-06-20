@@ -46,7 +46,7 @@
                     Debug.WriteLine($" 🌸 Flower slot {flower.Slot}: {flower.DisplayName} (CodeName: {flower.CodeName}, HP: {flower.Hp}/15)");
                 }
 
-
+                UserSession.CurrentUser.IsNewUser = false;
                 Navigation.NavigateTo("/main");
             }
             else

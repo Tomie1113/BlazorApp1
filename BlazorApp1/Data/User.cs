@@ -8,5 +8,6 @@
         public string PasswordHash { get; set; } = string.Empty;
         public int Coins { get; set; }
         public List<Flower> Flowers { get; set; } = new(); // 🌸 вот это поле
+        public bool IsNewUser { get; set; }
     }
 }

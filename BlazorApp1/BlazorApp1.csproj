@@ -15,7 +15,6 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="wwwroot\images\flowers_shop\" />
-	  <Folder Include="wwwroot\images\icons\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Update="Resources\Pages\Game.resx">
