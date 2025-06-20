@@ -1,5 +1,6 @@
 ﻿using BlazorApp1.Data;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Localization;
 using System.Globalization;
@@ -15,6 +16,10 @@ builder.Services.AddHttpContextAccessor();
 // Razor Pages и Blazor
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
+
+builder.Services.AddScoped<AuthenticationStateProvider, CookieAuthStateProvider>();
+builder.Services.AddAuthorizationCore();
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
