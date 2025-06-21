@@ -15,7 +15,7 @@
     <link rel="icon" type="image/png" href="favicon.png"/>
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
 </head>
-<script>
+@* <script>
     const DESIGN_W = 800;
     function updateScale() {
       const f = document.querySelector('.game-frame');
@@ -25,7 +25,7 @@
     }
     window.addEventListener('resize', updateScale);
     window.addEventListener('load',   updateScale);
-</script>
+</script> *@
 <body>
     <component type="typeof(App)" render-mode="ServerPrerendered" />
    @*  <div id="blazor-error-ui">
@@ -45,7 +45,7 @@
 
     <script src="audio.js"></script>
 
-    <script>
+    @* <script>
         function updateSliderBackground(slider) {
           const val = (slider.value - slider.min) / (slider.max - slider.min) * 100;
           slider.style.backgroundSize = val + '% 100%';
@@ -57,6 +57,6 @@
             slider.addEventListener('input', () => updateSliderBackground(slider));
           });
         });
-    </script>
+    </script> *@
 </body>
 </html>

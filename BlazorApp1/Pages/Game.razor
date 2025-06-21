@@ -533,12 +533,12 @@
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
 
-        await JSRuntime.InvokeVoidAsync("eval",
-          @"document.body.addEventListener(
-                'click',
-                () => window.initAudio(),
-                { once: true }
-              );");
+        // await JSRuntime.InvokeVoidAsync("eval",
+        //   @"document.body.addEventListener(
+        //         'click',
+        //         () => window.initAudio(),
+        //         { once: true }
+        //       );");
         var req = httpContextAccessor.HttpContext?.Request;
         if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
             int.TryParse(mvStr, out var mv))
@@ -923,7 +923,7 @@
 
   
   
-@if (UserSession.CurrentUser != null)
+@if (CurrentUserSvc.User != null)
 {
     <div class="game-wrapper">
         <div class="left-panel @panelState @(IsLeftPanelActive ? "active" : "")">
@@ -996,7 +996,7 @@
         </div>
             <div id="moneyId" class="money-container">
                 <img class="money-icon @(TutorMoney ? "active" : "")" src="images/icons/money.png" />
-            <div class="money-amount">@UserSession.CurrentUser.Coins</div>
+                <div class="money-amount">@CurrentUserSvc.User.Coins</div>
         </div>
 
         <div class="slots-panel">
