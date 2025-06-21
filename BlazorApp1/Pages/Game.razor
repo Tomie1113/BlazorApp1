@@ -292,7 +292,7 @@
     bool showShop = false;
     bool showMyFlowers = false;
     bool showShopError = false;
-
+    bool fdsfds = true;
     async void OpenSettings()
     {
         await ShowCoinChange(-1, "defaultSound");
@@ -1032,15 +1032,10 @@
     </div>
 
     <!-- Модальные окна -->
-    <!-- Модальные окна -->
     @if (showSettings || showShop || showMyFlowers)
     {
         <div class="modal-overlay"></div>
     }
-@*     if (CurrentUserSvc.User.IsNewUser)
-    {
-        showTutorialPrompt = true;
-    } *@
 
 
     @if (showSettings)
