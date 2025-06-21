@@ -196,7 +196,8 @@
     {
         if (!await buyLock.WaitAsync(0))
             return; // если семафор занят — не пускаем
-        try{
+        try
+        {
             if (CurrentUserSvc.User.Coins < flower.PriceBuy)
             {
                 showShop = false;
@@ -240,17 +241,17 @@
 
             // Добавить в список в C#
             CurrentUserSvc.User.Flowers.Add(new Flower
-            {
-                 Id = newId,
-                TypeId = flower.TypeId,
-                DisplayName = flower.DisplayName,
-                CodeName = flower.CodeName,
-                PriceBuy = flower.PriceBuy,
-                PriceSell = flower.PriceSell,
-                Hp = 9,
-                MaxHp = 15,
-                Slot = freeSlot
-            });
+                {
+                    Id = newId,
+                    TypeId = flower.TypeId,
+                    DisplayName = flower.DisplayName,
+                    CodeName = flower.CodeName,
+                    PriceBuy = flower.PriceBuy,
+                    PriceSell = flower.PriceSell,
+                    Hp = 9,
+                    MaxHp = 15,
+                    Slot = freeSlot
+                });
 
             StateHasChanged();
         }
@@ -518,12 +519,11 @@
     protected override async void OnInitialized()
     {
 
-        //if (UserSession.CurrentUser.IsNewUser)
-        if (true)
+        if (CurrentUserSvc.User.IsNewUser)
         {
             showTutorialPrompt = true;
         }
-             
+
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
         await LoadValidTypeIds();
@@ -772,7 +772,8 @@
 
     private async Task SubmitAnswer()
     {
-        try{
+        try
+        {
             if (currentQuestionSlot is null || !activeQuestions.TryGetValue(currentQuestionSlot.Value, out var question))
                 return;
 
@@ -806,7 +807,7 @@
         }
         catch (Exception ex)
         {
-            Debug.WriteLine("Ошибка" + ex.Message); 
+            Debug.WriteLine("Ошибка" + ex.Message);
         }
     }
 
@@ -917,34 +918,34 @@
         InstructionTytle = "Инструкция";
         InstructionText = "Это - твой маленький домашний сад. Здесь ты можешь выращивать свои растения, их не нужно поливать и удобрять, но важно правильно отвечать на их вопросы. Если ответ правильный, тебе начислят 5 монет, при ошибке - твое растение начнет вянуть. При большом количестве ошибок цветок полностью завянет и его придется выкинуть. Справа сверху указано твое количество монет. Чтобы продать или купить цветы, нужно открыть вкладку с тележкой или цветком. Во вкладке настроек можно поменять громкость. Приятного выращивания!";
     }
-    
+
 
 }
 
-  
-  
+
+
 @if (CurrentUserSvc.User != null)
 {
     <div class="game-wrapper">
         <div class="left-panel @panelState @(IsLeftPanelActive ? "active" : "")">
-                <div class="text-container">
-            <div class="text-window">
-                <h3>@InstructionTytle</h3>
-                            <p style="text-align: left;">@InstructionText</p>
-                            
-                       </div>
-                                       <button class="next-button @buttonState @(TutorEnd ? "active" : "")" @onclick="TutorClick">Далее</button>
-                                           <div class="image-container">
-                               <img src="/images/icons/toad.png" class="bottom-image" />
-                                   </div>
-                       </div>
-                           
-    </div>
-    <div class="game-container">
-               <button class="top-left-button @(TutorInstruct ? "active" : "")" @onclick="InstructionsButton"><img src="/images/icons/lamp.png"/></button>
-                                    
-        <div class="game-field">
-            <div class="shelf"> 
+            <div class="text-container">
+                <div class="text-window">
+                    <h3>@InstructionTytle</h3>
+                    <p style="text-align: left;">@InstructionText</p>
+
+                </div>
+                <button class="next-button @buttonState @(TutorEnd ? "active" : "")" @onclick="TutorClick">Далее</button>
+                <div class="image-container">
+                    <img src="/images/icons/toad.png" class="bottom-image" />
+                </div>
+            </div>
+
+        </div>
+        <div class="game-container">
+            <button class="top-left-button @(TutorInstruct ? "active" : "")" @onclick="InstructionsButton"><img src="/images/icons/lamp.png" /></button>
+
+            <div class="game-field">
+                <div class="shelf">
                     <div class="shelf-background"></div>  <!-- добавляем фон полки -->
                     @foreach (var slot in new[] { 0, 1, 2 })
                     {
@@ -955,88 +956,88 @@
                             </div>
 
 
-                        <!-- Цветок (должен быть сверху) -->
-                                <div class="flower-box">
-                                    <img class="@(TutorFlower ? "active" : "")" src="@GetFlowerImage(slot)" />
-                            @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
-                            {
-                                <div class="question-bubble @(TutorQuestion ? "active" : "")" @onclick="@(() => OpenQuestionModal(slot))">
-                                    ?
-                                </div>
-                            }
-                        </div>
-                    </div>
-                 
-                 }
-            </div>
-            <div class="shelf">
-                <div class="shelf-background"></div>  <!-- добавляем фон полки -->
-                @foreach (var slot in new[] { 3, 4, 5 })
-                {
-                                            <div class="flower-slot">
-                        <!-- Горшок (должен быть внизу) -->
-                        <div class="pot-box">
-                            <img src="@GetPotImage(slot)" />
+                            <!-- Цветок (должен быть сверху) -->
+                            <div class="flower-box">
+                                <img class="@(TutorFlower ? "active" : "")" src="@GetFlowerImage(slot)" />
+                                @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
+                                {
+                                    <div class="question-bubble @(TutorQuestion ? "active" : "")" @onclick="@(() => OpenQuestionModal(slot))">
+                                        ?
+                                    </div>
+                                }
+                            </div>
                         </div>
 
-                        <!-- Цветок (должен быть сверху) -->
-                        <div class="flower-box">
-                                  <img class="@(TutorFlower ? "active" : "")" src="@GetFlowerImage(slot)" />
-                            @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
-                            {
-                                <div id="questionId" class="question-bubble @(TutorQuestion ? "active" : "")"  @onclick="@(() => OpenQuestionModal(slot))">
-                                    ?
-                                </div>
-                            }
+                    }
+                </div>
+                <div class="shelf">
+                    <div class="shelf-background"></div>  <!-- добавляем фон полки -->
+                    @foreach (var slot in new[] { 3, 4, 5 })
+                    {
+                        <div class="flower-slot">
+                            <!-- Горшок (должен быть внизу) -->
+                            <div class="pot-box">
+                                <img src="@GetPotImage(slot)" />
+                            </div>
+
+                            <!-- Цветок (должен быть сверху) -->
+                            <div class="flower-box">
+                                <img class="@(TutorFlower ? "active" : "")" src="@GetFlowerImage(slot)" />
+                                @if (activeQuestions.ContainsKey(slot) && activeQuestions[slot] != null)
+                                {
+                                    <div id="questionId" class="question-bubble @(TutorQuestion ? "active" : "")" @onclick="@(() => OpenQuestionModal(slot))">
+                                        ?
+                                    </div>
+                                }
+                            </div>
                         </div>
-                    </div>
-                }
+                    }
+                </div>
+
             </div>
-        
-        </div>
             <div id="moneyId" class="money-container">
                 <img class="money-icon @(TutorMoney ? "active" : "")" src="images/icons/money.png" />
                 <div class="money-amount">@CurrentUserSvc.User.Coins</div>
-        </div>
+            </div>
 
-        <div class="slots-panel">
-            <div class="slot-button" @onclick="OpenMyFlowers">
-                        <img class="slot-icon @(TutorMyFlowers ? "active" : "")" src="images/icons/my_flowers.png" />
-            </div>
-            <div class="slot-button" @onclick="OpenShop">
+            <div class="slots-panel">
+                <div class="slot-button" @onclick="OpenMyFlowers">
+                    <img class="slot-icon @(TutorMyFlowers ? "active" : "")" src="images/icons/my_flowers.png" />
+                </div>
+                <div class="slot-button" @onclick="OpenShop">
                     <img class="slot-icon @(TutorShop ? "active" : "")" src="images/icons/shop.png" />
-            </div>
-            <div class="slot-button" @onclick="OpenSettings">
+                </div>
+                <div class="slot-button" @onclick="OpenSettings">
                     <img class="slot-icon @(TutorSettings ? "active" : "")" src="images/icons/settings.png" />
-            </div>
-            @*             <div class="slot-button" @onclick="GoToLogin">
+                </div>
+                @*             <div class="slot-button" @onclick="GoToLogin">
 
                 <img class="slot-icon" src="images/icons/home.png" />
             </div> *@
             </div>
         </div>
 
-            @if (showTutorialPrompt)
-            {
-                        <div class="tutorial-prompt-overlay">
-                            <div class="tutorial-prompt-container">
-                                <h3>Обучение</h3>
-                                <p>Привет! Вижу, ты тут впервые. Хочешь пройти краткое обучение по игре?</p>
-                                <div class="tutorial-prompt-buttons">
-                                            <button class="btn-yes" @onclick="StartTutorial">Да, конечно!</button>
-                                                                    <button class="btn-no" @onclick="() => showTutorialPrompt = false ">Нет, спасибо</button>
-                                </div>
-                            </div>
-                        </div>
-            }
+        @if (showTutorialPrompt)
+        {
+            <div class="tutorial-prompt-overlay">
+                <div class="tutorial-prompt-container">
+                    <h3>Обучение</h3>
+                    <p>Привет! Вижу, ты тут впервые. Хочешь пройти краткое обучение по игре?</p>
+                    <div class="tutorial-prompt-buttons">
+                        <button class="btn-yes" @onclick="StartTutorial">Да, конечно!</button>
+                        <button class="btn-no" @onclick="() => showTutorialPrompt = false ">Нет, спасибо</button>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 
-        <!-- Модальные окна -->
-        <!-- Модальные окна -->
-        @if (showSettings || showShop || showMyFlowers)
-        {
-            <div class="modal-overlay"></div>
-        }
+    <!-- Модальные окна -->
+    <!-- Модальные окна -->
+    @if (showSettings || showShop || showMyFlowers)
+    {
+        <div class="modal-overlay"></div>
+    }
 
 
 
@@ -1053,54 +1054,54 @@
                 </select>
             </label>
 
-           
+
             <label>
                 @Localizer["MusicVolumeLabel"]
-              
-                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="MusicVolume" @bind-value:event="oninput" />
-                </label>
 
-                <label>
-                    @Localizer["EffectsVolumeLabel"]
-                    <input class="volume-slider" type="range" min="0" max="100" @bind-value="EffectsVolume" @bind-value:event="oninput" />
-                </label>
+                <input class="volume-slider" type="range" min="0" max="100" @bind-value="MusicVolume" @bind-value:event="oninput" />
+            </label>
 
-                <div class="modal-buttons">
-                    <button @onclick="GoToLogin">@Localizer["LogoutButtonText"]</button>
-                    <button @onclick="CloseModals">@Localizer["CloseButtonText"]</button>
-                </div>
+            <label>
+                @Localizer["EffectsVolumeLabel"]
+                <input class="volume-slider" type="range" min="0" max="100" @bind-value="EffectsVolume" @bind-value:event="oninput" />
+            </label>
+
+            <div class="modal-buttons">
+                <button @onclick="GoToLogin">@Localizer["LogoutButtonText"]</button>
+                <button @onclick="CloseModals">@Localizer["CloseButtonText"]</button>
             </div>
-        }
+        </div>
+    }
 
 
-        @if (showShop)
-        {
-            <div class="modal1">
-                <h3>@Localizer["StoreHeader"]</h3>
+    @if (showShop)
+    {
+        <div class="modal1">
+            <h3>@Localizer["StoreHeader"]</h3>
 
-                <div class="shop-scroll-wrapper">
-                    <div class="flower-grid">
-                        @foreach (var flower in shopFlowers)
-                        {
-                            <div class="flower-card">
-                                <img src="@GetShopFlowerImage(flower)" class="flower-img" />
-                                <div class="flower-name">@flower.DisplayName</div>
-                                <div class="spacer"></div> <!-- вот эта вставка важна -->
-                                <div class="flower-action">
-                                   <button class="flower-button" @onclick="@(async () => { BuyFlower(flower); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
-                                        @Localizer["BuyPriceTag"]@flower.PriceBuy
-                                    </button>
-                                </div>
+            <div class="shop-scroll-wrapper">
+                <div class="flower-grid">
+                    @foreach (var flower in shopFlowers)
+                    {
+                        <div class="flower-card">
+                            <img src="@GetShopFlowerImage(flower)" class="flower-img" />
+                            <div class="flower-title">@flower.DisplayName</div>
+                            <div class="spacer"></div> <!-- вот эта вставка важна -->
+                            <div class="flower-action">
+                                <button class="flower-button" @onclick="@(async () => { BuyFlower(flower); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                                    @Localizer["BuyPriceTag"]@flower.PriceBuy
+                                </button>
                             </div>
-                        }
-                    </div>
+                        </div>
+                    }
                 </div>
-
-                <button class="close-full-button" @onclick="@(async () => { CloseModals(); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
-                    @Localizer["CloseButtonText"]
-                </button>
             </div>
-        }
+
+            <button class="close-full-button" @onclick="@(async () => { CloseModals(); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                @Localizer["CloseButtonText"]
+            </button>
+        </div>
+    }
 
     @if (showShopError)
     {
@@ -1108,134 +1109,135 @@
         <div class="modal1 error-modal show">
             <h3 class="modal-title">@shopTitleMessage</h3>
             <p>@shopErrorMessage</p>
-                        <button class="close-full-button" @onclick="@(async () => { showShopError = false; await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
-                    @Localizer["CloseButtonText"]
-                </button>
+            <button class="close-full-button" @onclick="@(async () => { showShopError = false; await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                @Localizer["CloseButtonText"]
+            </button>
         </div>
     }
 
 
-        @if (showMyFlowers)
-        {
-            <div class="modal1">
-                <h3>@Localizer["FlowerHeadder"]</h3>
-                <div class="shop-scroll-wrapper">
-                    @if (CurrentUserSvc.User.Flowers.Count > 0)
-                    {
-                        <div class="flower-grid">
+    @if (showMyFlowers)
+    {
+        <div class="modal1">
+            <h3>@Localizer["FlowerHeadder"]</h3>
+            <div class="shop-scroll-wrapper">
+                @if (CurrentUserSvc.User.Flowers.Count > 0)
+                {
+                    <div class="flower-grid">
 
-                            @foreach (var flower in CurrentUserSvc.User.Flowers.OrderBy(f => f.Slot))
+                        @foreach (var flower in CurrentUserSvc.User.Flowers.OrderBy(f => f.Slot))
+                        {
+                            var state = flower.GetStateImage().Split('/').Last().Replace(".png", "");
+                            int sellPrice = flower.PriceSell;
+
+                            switch (state)
                             {
-                                var state = flower.GetStateImage().Split('/').Last().Replace(".png", "");
-                                int sellPrice = flower.PriceSell;
-
-                                switch (state)
-                                {
-                                    case "pre_fall": sellPrice /= 2; break;
-                                    case "fall": sellPrice = 0; break;
-                                    case "pre_rise": sellPrice = (int)(sellPrice * 1.5); break;
-                                    case "rise": sellPrice *= 2; break;
-                                }
-                                <div class="flower-card">
-                                    <div class="image-stack">
-                                        <img src="/images/box/cream_box.png" class="pot-image" />
-                                        <img src="@flower.GetStateImage()" class="flower-image1" />
-                                    </div>
-
-                                    <div class="flower-title">@flower.DisplayName</div>
-                                    <div class="flower-status">@GetStateDisplayName(state, flower)</div>
-                                    <div class="spacer"></div> <!-- вот эта вставка важна -->
-                                    <div class="flower-actions">
-
-                                        @if (flower.IsDead)
-                                        {
-                                            <button class="flower-button remove" @onclick="() => ThrowOutFlower(flower)">
-                                                🗑 <span>@Localizer["RemovePlantTag"]</span>
-                                            </button>
-                                        }
-                                        else
-                                        {
-
-                                            <button class="flower-button" @onclick="@(async () => { await SellFlower(flower.Id, sellPrice); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
-                                               @Localizer["SellPriceTag"] @sellPrice
-
-                                            </button>
-                                        }
-                                    </div>
-                                </div>
-
+                                case "pre_fall": sellPrice /= 2; break;
+                                case "fall": sellPrice = 0; break;
+                                case "pre_rise": sellPrice = (int)(sellPrice * 1.5); break;
+                                case "rise": sellPrice *= 2; break;
                             }
-                        </div>
-                    }
-                    else
-                    {
-                        zeroFlowersMessage = "У вас нет цветов, купите их в магазине!";
-                        <p>@zeroFlowersMessage</p>
-                    }
-                </div>
-                <button class="close-full-button" @onclick="CloseModals">
-                    @Localizer["CloseButtonText"]
-                </button>
+                            <div class="flower-card">
+                                <div class="image-stack">
+                                    <img src="/images/box/cream_box.png" class="pot-image" />
+                                    <img src="@flower.GetStateImage()" class="flower-image1" />
+                                </div>
+                                <div class="spacer"></div> <!-- вот эта вставка важна -->
+                                <div class="flower-title">@flower.DisplayName</div>
+                                <div class="flower-status">@GetStateDisplayName(state, flower)</div>
+ @*                                <div class="spacer"></div> <!-- вот эта вставка важна --> *@
+                                <div class="flower-actions">
 
+                                    @if (flower.IsDead)
+                                    {
+                                        <button class="flower-button remove" @onclick="() => ThrowOutFlower(flower)">
+                                            🗑 <span>@Localizer["RemovePlantTag"]</span>
+                                        </button>
+                                    }
+                                    else
+                                    {
+
+                                        <button class="flower-button" @onclick="@(async () => { await SellFlower(flower.Id, sellPrice); await JSRuntime.InvokeVoidAsync("playSound", "defaultSound"); })">
+                                            @Localizer["SellPriceTag"] @sellPrice
+
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                        }
+                    </div>
+                }
+                else
+                {
+                    zeroFlowersMessage = "У вас нет цветов, купите их в магазине!";
+                    <p>@zeroFlowersMessage</p>
+                }
             </div>
-        }
+            <button class="close-full-button" @onclick="CloseModals">
+                @Localizer["CloseButtonText"]
+            </button>
 
-        @if (currentQuestionSlot != null && activeQuestions.ContainsKey(currentQuestionSlot.Value))
+        </div>
+    }
+
+    @if (currentQuestionSlot != null && activeQuestions.ContainsKey(currentQuestionSlot.Value))
+    {
+        var question = activeQuestions[currentQuestionSlot.Value];
+        if (question != null)
         {
-            var question = activeQuestions[currentQuestionSlot.Value];
-            if (question != null)
-            {
-                <div class="question-modal">
-                    <h3>@Localizer["QestionHeader"]</h3>
-                    <p>@question.Content</p>
-                    @foreach (var answer in question.Answers)
-                    {
-                        <label>
-                            <input type="radio" name="answer" value="@answer.Id"
-                                   @onchange="@(
+            <div class="question-modal">
+                <h3>@Localizer["QestionHeader"]</h3>
+                <p>@question.Content</p>
+                @foreach (var answer in question.Answers)
+                {
+                    <label>
+                        <input type="radio" name="answer" value="@answer.Id"
+                               @onchange="@(
                     async () =>
                     {
                         selectedAnswerId = answer.Id;
                         await JSRuntime.InvokeVoidAsync("playSound", "defaultSound");
                     }
                 )"
-                                   checked="@((selectedAnswerId == answer.Id))" />
-                            @answer.Content
-                        </label>
-                    }
+                               checked="@((selectedAnswerId == answer.Id))" />
+                        @answer.Content
+                    </label>
+                }
 
 
-                    <button class="action-button1" @onclick="SubmitAnswer">Ответить</button>
-                    <button class="close-full-button1" @onclick="CloseQuestionModal">Закрыть</button>
-                </div>
-            }
-        }
-
-    }
-        
-
-        <script src="audio.js"></script>
-
-        <audio id="backgroundMusic"
-               src="/audio/background-loop.mp3"
-               preload="auto"
-               loop
-               muted
-               playsinline>
-        </audio>
-        <audio id="successSound" src="/audio/success.mp3" preload="auto"></audio>
-        <audio id="loseSound" src="/audio/lose.mp3" preload="auto"></audio>
-        <audio id="defaultSound" src="/audio/default.mp3" preload="auto"></audio>
-
-        @if (ShowCoinNotification)
-        {
-            @*             <div class="coin-notification @(IsPositiveCoin ? "positive" : "negative")">
-                <span>@CoinMessage</span>
-            </div> *@
-            <div class="coin-notification
-            @(ShowCoinNotification ? (IsPositiveCoin ? "positive show" : "negative show") : "")">
-                <span>@CoinMessage</span>
+                <button class="action-button1" @onclick="SubmitAnswer">Ответить</button>
+                <button class="close-full-button1" @onclick="CloseQuestionModal">Закрыть</button>
             </div>
         }
+    }
 
+}
+else
+{
+    Navigation.NavigateTo("/");
+}
+
+<script src="audio.js"></script>
+
+<audio id="backgroundMusic"
+       src="/audio/background-loop.mp3"
+       preload="auto"
+       loop
+       muted
+       playsinline>
+</audio>
+<audio id="successSound" src="/audio/success.mp3" preload="auto"></audio>
+<audio id="loseSound" src="/audio/lose.mp3" preload="auto"></audio>
+<audio id="defaultSound" src="/audio/default.mp3" preload="auto"></audio>
+
+@if (ShowCoinNotification)
+{
+    @*             <div class="coin-notification @(IsPositiveCoin ? "positive" : "negative")">
+                <span>@CoinMessage</span>
+            </div> *@
+    <div class="coin-notification
+            @(ShowCoinNotification ? (IsPositiveCoin ? "positive show" : "negative show") : "")">
+        <span>@CoinMessage</span>
+    </div>
 }
