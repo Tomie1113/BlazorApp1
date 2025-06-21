@@ -515,6 +515,24 @@
         public bool IsCorrect { get; set; }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeVoidAsync("eval",
+          @"document.body.addEventListener(
+                'click',
+                () => window.initAudio(),
+                { once: true }
+              );");
+        var req = httpContextAccessor.HttpContext?.Request;
+        if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
+            int.TryParse(mvStr, out var mv))
+            MusicVolume = mv;
+
+        if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
+            int.TryParse(evStr, out var ev))
+            EffectsVolume = ev;
+    }
+
     protected override async void OnInitialized()
     {
 
@@ -533,28 +551,13 @@
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
 
-        // await JSRuntime.InvokeVoidAsync("eval",
-        //   @"document.body.addEventListener(
-        //         'click',
-        //         () => window.initAudio(),
-        //         { once: true }
-        //       );");
-        var req = httpContextAccessor.HttpContext?.Request;
-        if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
-            int.TryParse(mvStr, out var mv))
-            MusicVolume = mv;
-
-        if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
-            int.TryParse(evStr, out var ev))
-            EffectsVolume = ev;
-        await LoadValidTypeIds();
-
         questionTimer = new System.Timers.Timer();
         questionTimer.Elapsed += async (s, e) => await HandleTimerTick();
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
         InstructionTextBox();
     }
+
 
 
     private async Task HandleTimerTick()
