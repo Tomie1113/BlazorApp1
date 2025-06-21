@@ -551,8 +551,6 @@
         AdjustTimerInterval();
         InstructionTextBox();
 
-
-
     }
 
 
@@ -1210,7 +1208,7 @@
     }
 
 }
-else
+@if (CurrentUserSvc.User == null)
 {
     Navigation.NavigateTo("/");
 }
