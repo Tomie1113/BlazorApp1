@@ -10,6 +10,7 @@
     public string DisplayName { get; set; } = ""; // из flowertypes.name
     public int PriceBuy { get; set; }  // ← из flowertypes
     public int PriceSell { get; set; } // ← из flowertypes
+    public double HpPercentage => (double)Hp / MaxHp * 100;
     public string GetStateImage()
     {
         if (IsDead)

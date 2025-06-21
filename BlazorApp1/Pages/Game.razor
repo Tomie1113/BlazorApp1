@@ -918,6 +918,37 @@
         InstructionText = "Это - твой маленький домашний сад. Здесь ты можешь выращивать свои растения, их не нужно поливать и удобрять, но важно правильно отвечать на их вопросы. Если ответ правильный, тебе начислят 5 монет, при ошибке - твое растение начнет вянуть. При большом количестве ошибок цветок полностью завянет и его придется выкинуть. Справа сверху указано твое количество монет. Чтобы продать или купить цветы, нужно открыть вкладку с тележкой или цветком. Во вкладке настроек можно поменять громкость. Приятного выращивания!";
     }
 
+    private string GetHpColor(Flower flowerHP)
+    {
+        var percentage = flowerHP.HpPercentage;
+        return percentage > 60 ? "green" :
+               percentage > 30 ? "orange" : "red";
+    }
+
+
+    private Flower flow()
+    {
+        // Проверка всей цепочки на null
+        if (CurrentUserSvc?.User?.Flowers == null)
+        {
+            // Можно вернуть null или выбросить понятное исключение
+            return null;
+            // Или: throw new Exception("Данные пользователя не загружены");
+        }
+
+        // Безопасный поиск с обработкой отсутствия элемента
+        try
+        {
+            return CurrentUserSvc.User.Flowers.FirstOrDefault(f =>
+                f.Slot == currentQuestionSlot.Value);
+        }
+        catch (Exception ex)
+        {
+            // Логирование ошибки
+            Console.WriteLine($"Ошибка при поиске цветка: {ex.Message}");
+            return null;
+        }
+    }
 
 }
 
@@ -931,7 +962,6 @@
                 <div class="text-window">
                     <h3>@InstructionTytle</h3>
                     <p style="text-align: left;">@InstructionText</p>
-
                 </div>
                 <button class="next-button @buttonState @(TutorEnd ? "active" : "")" @onclick="TutorClick">Далее</button>
                 <div class="image-container">
@@ -954,6 +984,10 @@
                                 <img src="@GetPotImage(slot)" />
                             </div>
 
+                                <div class="hp-bar-container">
+                                    <div class="hp-bar" style="@($"width: {flow().HpPercentage}%; background: {GetHpColor(CurrentUserSvc.User.Flowers.First(f => f.Slot == currentQuestionSlot.Value))};")"></div>
+                                        <span class="hp-text">@flow().Hp/@flow().MaxHp</span>
+                                </div>
 
                             <!-- Цветок (должен быть сверху) -->
                             <div class="flower-box">
