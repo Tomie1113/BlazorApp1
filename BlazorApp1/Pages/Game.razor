@@ -516,7 +516,19 @@
         public bool IsCorrect { get; set; }
     }
 
-    protected override async void OnInitialized()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // unlock audio on first user click
+            await JSRuntime.InvokeVoidAsync("eval", @"
+          document.body.addEventListener('click', () => window.initAudio(), { once: true });
+        ");
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
     {
 
 
@@ -528,13 +540,6 @@
         questionTimer.Elapsed += async (s, e) => await HandleTimerTick();
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
-
-        // await JSRuntime.InvokeVoidAsync("eval",
-        //   @"document.body.addEventListener(
-        //         'click',
-        //         () => window.initAudio(),
-        //         { once: true }
-        //       );");
         var req = httpContextAccessor.HttpContext?.Request;
         if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
             int.TryParse(mvStr, out var mv))
@@ -543,7 +548,11 @@
         if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
             int.TryParse(evStr, out var ev))
             EffectsVolume = ev;
-        await LoadValidTypeIds();
+
+        if (CurrentUserSvc.User == null)
+            Navigation.NavigateTo("/");
+        else
+            await LoadValidTypeIds();
 
         questionTimer = new System.Timers.Timer();
         questionTimer.Elapsed += async (s, e) => await HandleTimerTick();
@@ -1208,10 +1217,10 @@
     }
 
 }
-@if (CurrentUserSvc.User == null)
+@* @if (CurrentUserSvc.User == null)
 {
     Navigation.NavigateTo("/");
-}
+} *@
 
 <script src="audio.js"></script>
 
