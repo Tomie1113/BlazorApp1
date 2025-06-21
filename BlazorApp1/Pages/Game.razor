@@ -292,7 +292,7 @@
     bool showShop = false;
     bool showMyFlowers = false;
     bool showShopError = false;
-
+    bool fdsfds = true;
     async void OpenSettings()
     {
         await ShowCoinChange(-1, "defaultSound");
@@ -516,31 +516,9 @@
         public bool IsCorrect { get; set; }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await JSRuntime.InvokeVoidAsync("eval",
-          @"document.body.addEventListener(
-                'click',
-                () => window.initAudio(),
-                { once: true }
-              );");
-        var req = httpContextAccessor.HttpContext?.Request;
-        if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
-            int.TryParse(mvStr, out var mv))
-            MusicVolume = mv;
-
-        if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
-            int.TryParse(evStr, out var ev))
-            EffectsVolume = ev;
-    }
-
     protected override async void OnInitialized()
     {
 
-        if (CurrentUserSvc.User.IsNewUser)
-        {
-            showTutorialPrompt = true;
-        }
 
         selectedLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
@@ -551,13 +529,31 @@
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
 
+        // await JSRuntime.InvokeVoidAsync("eval",
+        //   @"document.body.addEventListener(
+        //         'click',
+        //         () => window.initAudio(),
+        //         { once: true }
+        //       );");
+        var req = httpContextAccessor.HttpContext?.Request;
+        if (req?.Cookies.TryGetValue("musicVolume", out var mvStr) == true &&
+            int.TryParse(mvStr, out var mv))
+            MusicVolume = mv;
+
+        if (req?.Cookies.TryGetValue("effectsVolume", out var evStr) == true &&
+            int.TryParse(evStr, out var ev))
+            EffectsVolume = ev;
+        await LoadValidTypeIds();
+
         questionTimer = new System.Timers.Timer();
         questionTimer.Elapsed += async (s, e) => await HandleTimerTick();
         questionTimer.AutoReset = false;
         AdjustTimerInterval();
         InstructionTextBox();
-    }
 
+
+
+    }
 
 
     private async Task HandleTimerTick()
@@ -844,7 +840,7 @@
 
     private void StartTutorial()
     {
-        showTutorialPrompt = false;
+        CurrentUserSvc.User.IsNewUser = false;
         IsLeftPanelActive = true;
         panelState = panelState == "hidden" ? "visible" : "hidden";
         buttonState = buttonState == "hidden" ? "visible" : "hidden";
@@ -1020,7 +1016,7 @@
             </div>
         </div>
 
-        @if (showTutorialPrompt)
+        @if (CurrentUserSvc.User.IsNewUser)
         {
             <div class="tutorial-prompt-overlay">
                 <div class="tutorial-prompt-container">
@@ -1028,7 +1024,7 @@
                     <p>Привет! Вижу, ты тут впервые. Хочешь пройти краткое обучение по игре?</p>
                     <div class="tutorial-prompt-buttons">
                         <button class="btn-yes" @onclick="StartTutorial">Да, конечно!</button>
-                        <button class="btn-no" @onclick="() => showTutorialPrompt = false ">Нет, спасибо</button>
+                        <button class="btn-no" @onclick="() => CurrentUserSvc.User.IsNewUser = false ">Нет, спасибо</button>
                     </div>
                 </div>
             </div>
@@ -1036,12 +1032,10 @@
     </div>
 
     <!-- Модальные окна -->
-    <!-- Модальные окна -->
     @if (showSettings || showShop || showMyFlowers)
     {
         <div class="modal-overlay"></div>
     }
-
 
 
     @if (showSettings)
